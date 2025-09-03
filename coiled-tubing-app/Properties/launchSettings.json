@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "coiled-tubing-app (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "coiled-tubing-app (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
