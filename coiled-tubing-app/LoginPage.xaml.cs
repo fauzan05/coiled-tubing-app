@@ -33,7 +33,7 @@ namespace coiled_tubing_app
             }
         }
 
-        private bool ValidateLogin(string username, string password)
+        private static bool ValidateLogin(string username, string password)
         {
             // Contoh validasi sederhana - ganti dengan logika autentikasi yang sebenarnya
             // Misalnya: validasi dengan database, API, atau Active Directory
