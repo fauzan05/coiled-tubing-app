@@ -1,7 +1,8 @@
 {
   "profiles": {
     "coiled-tubing-app (Package)": {
-      "commandName": "MsixPackage"
+      "commandName": "MsixPackage",
+      "nativeDebugging": true
     },
     "coiled-tubing-app (Unpackaged)": {
       "commandName": "Project"

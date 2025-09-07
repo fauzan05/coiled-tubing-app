@@ -1,4 +1,6 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Animation;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -19,6 +21,34 @@ namespace coiled_tubing_app
         {
             var loginWindow = new LoginWindow();
             loginWindow.Activate();
+        }
+
+        private void NavView_Navigate(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        {
+            if (args.SelectedItem is NavigationViewItem selectedItem)
+            {
+                string navItemTag = selectedItem.Tag.ToString();
+                Page page = null;
+
+                switch (navItemTag)
+                {
+                    case "DashboardPage":
+                        page = new DashboardPage();
+                        break;
+
+                    case "SensorPage":
+                        //page = new SensorPage();
+                        break;
+
+                        // tambahin case lain sesuai kebutuhan
+                }
+
+                if (page != null)
+                {
+                    // contentFrame9 adalah <Frame x:Name="contentFrame9" /> di XAML
+                    contentFrame9.Navigate(page.GetType(), null, new EntranceNavigationTransitionInfo());
+                }
+            }
         }
     }
 }
