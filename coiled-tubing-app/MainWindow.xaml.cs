@@ -15,6 +15,8 @@ namespace coiled_tubing_app
         public MainWindow()
         {
             InitializeComponent();
+            Page page = new DashboardPage();
+            contentFrame9.Navigate(page.GetType(), null, new EntranceNavigationTransitionInfo());
         }
 
         private void OpenLoginWindow(object sender, RoutedEventArgs e)
