@@ -27,6 +27,9 @@ namespace coiled_tubing_app
     public partial class App : Application
     {
         private Window? _window;
+        
+        // Static property untuk akses MainWindow dari service
+        public static Window MainWindow { get; private set; } = null!;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -44,6 +47,7 @@ namespace coiled_tubing_app
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             _window = new MainWindow();
+            MainWindow = _window;  // Set static property
             _window.Activate();
         }
     }

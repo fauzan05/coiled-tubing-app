@@ -39,10 +39,8 @@ namespace coiled_tubing_app
                         break;
 
                     case "SensorPage":
-                        //page = new SensorPage();
+                        page = new SensorPage();
                         break;
-
-                        // tambahin case lain sesuai kebutuhan
                 }
 
                 if (page != null)
