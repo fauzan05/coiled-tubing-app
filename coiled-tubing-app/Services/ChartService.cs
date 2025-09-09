@@ -1,6 +1,7 @@
 using coiled_tubing_app.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -10,6 +11,13 @@ namespace coiled_tubing_app.Services
 {
     public class ChartService
     {
+        private readonly FileHistoryService _fileHistoryService;
+
+        public ChartService()
+        {
+            _fileHistoryService = new FileHistoryService();
+        }
+
         // Daftar chart yang tersedia
         public List<ChartItem> GetAvailableCharts()
         {
@@ -24,8 +32,8 @@ namespace coiled_tubing_app.Services
             };
         }
 
-        // Simpan record ke file .fxz
-        public async Task<bool> SaveRecordAsync(ChartRecord record)
+        // Simpan record ke file .fxz dan return info file
+        public async Task<(bool Success, string FilePath, string Directory)> SaveRecordAsync(ChartRecord record)
         {
             try
             {
@@ -51,18 +59,23 @@ namespace coiled_tubing_app.Services
                 if (file != null)
                 {
                     await FileIO.WriteTextAsync(file, jsonString);
-                    return true;
+                    
+                    // Add to history
+                    await _fileHistoryService.AddHistoryItemAsync(record.RecordName, file.Path, FileHistoryType.Created);
+                    
+                    var directory = Path.GetDirectoryName(file.Path) ?? "";
+                    return (true, file.Path, directory);
                 }
-                return false;
+                return (false, "", "");
             }
             catch
             {
-                return false;
+                return (false, "", "");
             }
         }
 
-        // Load record dari file .fxz
-        public async Task<ChartRecord?> LoadRecordAsync()
+        // Load record dari file .fxz dan return record dengan file info
+        public async Task<(ChartRecord? Record, string FilePath, string Directory)> LoadRecordAsync()
         {
             try
             {
@@ -79,14 +92,29 @@ namespace coiled_tubing_app.Services
                 if (file != null)
                 {
                     string jsonString = await FileIO.ReadTextAsync(file);
-                    return JsonSerializer.Deserialize<ChartRecord>(jsonString);
+                    var record = JsonSerializer.Deserialize<ChartRecord>(jsonString);
+                    
+                    if (record != null)
+                    {
+                        // Add to history
+                        await _fileHistoryService.AddHistoryItemAsync(record.RecordName, file.Path, FileHistoryType.Loaded);
+                        
+                        var directory = Path.GetDirectoryName(file.Path) ?? "";
+                        return (record, file.Path, directory);
+                    }
                 }
-                return null;
+                return (null, "", "");
             }
             catch
             {
-                return null;
+                return (null, "", "");
             }
+        }
+
+        // Get file history service
+        public FileHistoryService GetFileHistoryService()
+        {
+            return _fileHistoryService;
         }
     }
 }

@@ -17,6 +17,9 @@ namespace coiled_tubing_app
         private readonly TextBox _recordNameTextBox;
         private readonly StackPanel _chartsPanel;
 
+        public string SavedFilePath { get; private set; } = "";
+        public string SavedDirectory { get; private set; } = "";
+
         public ChartSelectionDialog()
         {
             _chartService = new ChartService();
@@ -146,11 +149,16 @@ namespace coiled_tubing_app
                 CreatedDate = DateTime.Now
             };
 
-            // Simpan file
-            bool success = await _chartService.SaveRecordAsync(record);
-            if (!success)
+            // Simpan file dengan return value yang baru
+            var result = await _chartService.SaveRecordAsync(record);
+            if (!result.Success)
             {
                 args.Cancel = true;
+            }
+            else
+            {
+                SavedFilePath = result.FilePath;
+                SavedDirectory = result.Directory;
             }
         }
     }
