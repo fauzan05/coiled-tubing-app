@@ -59,10 +59,10 @@ namespace coiled_tubing_app.Services
                 if (file != null)
                 {
                     await FileIO.WriteTextAsync(file, jsonString);
-                    
+
                     // Add to history
                     await _fileHistoryService.AddHistoryItemAsync(record.RecordName, file.Path, FileHistoryType.Created);
-                    
+
                     var directory = Path.GetDirectoryName(file.Path) ?? "";
                     return (true, file.Path, directory);
                 }
@@ -93,12 +93,12 @@ namespace coiled_tubing_app.Services
                 {
                     string jsonString = await FileIO.ReadTextAsync(file);
                     var record = JsonSerializer.Deserialize<ChartRecord>(jsonString);
-                    
+
                     if (record != null)
                     {
                         // Add to history
                         await _fileHistoryService.AddHistoryItemAsync(record.RecordName, file.Path, FileHistoryType.Loaded);
-                        
+
                         var directory = Path.GetDirectoryName(file.Path) ?? "";
                         return (record, file.Path, directory);
                     }
@@ -115,6 +115,29 @@ namespace coiled_tubing_app.Services
         public FileHistoryService GetFileHistoryService()
         {
             return _fileHistoryService;
+        }
+
+        public async Task<(ChartRecord? Record, string FilePath, string Directory)> LoadRecordFromPathAsync(string filePath)
+        {
+            try
+            {
+                if (File.Exists(filePath))
+                {
+                    string jsonString = await FileIO.ReadTextAsync(await StorageFile.GetFileFromPathAsync(filePath));
+                    var record = JsonSerializer.Deserialize<ChartRecord>(jsonString);
+                    if (record != null)
+                    {
+                        // Add to history
+                        await _fileHistoryService.AddHistoryItemAsync(record.RecordName, filePath, FileHistoryType.Loaded);
+                        return (record, filePath, Path.GetDirectoryName(filePath) ?? "");
+                    }
+                }
+                return (null, "", "");
+            }
+            catch
+            {
+                return (null, "", "");
+            }
         }
     }
 }

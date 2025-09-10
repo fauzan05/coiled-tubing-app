@@ -22,7 +22,7 @@ namespace coiled_tubing_app
             {
                 InitializeComponent();
                 _currentHistoryItems = new List<FileHistoryItem>();
-                
+
                 // Initialize services after the page is loaded to avoid blocking UI thread
                 Loaded += SensorPage_Loaded;
             }
@@ -60,7 +60,7 @@ namespace coiled_tubing_app
                     // Initialize services with proper error handling
                     _chartService = new ChartService();
                     _fileHistoryService = _chartService.GetFileHistoryService();
-                    
+
                     // Update UI on UI thread
                     DispatcherQueue.TryEnqueue(() =>
                     {
@@ -74,7 +74,7 @@ namespace coiled_tubing_app
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"InitializeServicesAsync error: {ex.Message}");
-                    
+
                     // Create fallback instances to prevent null reference errors
                     try
                     {
@@ -86,7 +86,7 @@ namespace coiled_tubing_app
                         // Last resort - create minimal service instances
                         _currentHistoryItems = new List<FileHistoryItem>();
                     }
-                    
+
                     throw; // Re-throw to be handled by caller
                 }
             });
@@ -109,9 +109,9 @@ namespace coiled_tubing_app
 
                 var dialog = new ChartSelectionDialog();
                 dialog.XamlRoot = this.XamlRoot;
-                
+
                 var result = await dialog.ShowAsync();
-                
+
                 if (result == ContentDialogResult.Primary)
                 {
                     if (StatusTextBlock != null)
@@ -119,13 +119,13 @@ namespace coiled_tubing_app
                         StatusTextBlock.Text = $"Record saved successfully! Directory: {dialog.SavedDirectory}";
                         StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Green);
                     }
-                    
+
                     // Show directory automatically
                     if (!string.IsNullOrEmpty(dialog.SavedDirectory))
                     {
                         await ShowDirectoryAsync(dialog.SavedDirectory);
                     }
-                    
+
                     // Refresh history
                     await RefreshFileHistory();
                 }
@@ -164,14 +164,14 @@ namespace coiled_tubing_app
                 }
 
                 var result = await _chartService.LoadRecordAsync();
-                
+
                 if (result.Record != null)
                 {
                     // Clear content panel
                     if (ContentPanel != null)
                     {
                         ContentPanel.Children.Clear();
-                        
+
                         // Show record info
                         var titleBlock = new TextBlock
                         {
@@ -232,7 +232,7 @@ namespace coiled_tubing_app
                         StatusTextBlock.Text = $"Record loaded successfully from: {result.Directory}";
                         StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Green);
                     }
-                    
+
                     // Refresh history
                     await RefreshFileHistory();
                 }
@@ -335,13 +335,83 @@ namespace coiled_tubing_app
             }
         }
 
-        private void FileHistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void FileHistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
             {
-                if (OpenDirectoryButton != null && FileHistoryListView != null)
+                var selectedItem = FileHistoryListView?.SelectedItem as FileHistoryItem;
+                if (selectedItem != null)
                 {
-                    OpenDirectoryButton.IsEnabled = FileHistoryListView.SelectedItem != null;
+                    // menampilkan informasi seperti chartService.LoadRecordAsync();
+                    var result = await _chartService.LoadRecordFromPathAsync(selectedItem.FilePath);
+                    if (result.Record != null)
+                    {
+                        // Clear content panel
+                        if (ContentPanel != null)
+                        {
+                            ContentPanel.Children.Clear();
+                            // Show record info
+                            var titleBlock = new TextBlock
+                            {
+                                Text = $"Loaded Record: {result.Record.RecordName}",
+                                FontSize = 20,
+                                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                                Margin = new Thickness(0, 0, 0, 15)
+                            };
+                            ContentPanel.Children.Add(titleBlock);
+                            var dateBlock = new TextBlock
+                            {
+                                Text = $"Created: {result.Record.CreatedDate:yyyy-MM-dd HH:mm:ss}",
+                                FontSize = 14,
+                                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray),
+                                Margin = new Thickness(0, 0, 0, 10)
+                            };
+                            ContentPanel.Children.Add(dateBlock);
+                            var directoryBlock = new TextBlock
+                            {
+                                Text = $"Directory: {result.Directory}",
+                                FontSize = 14,
+                                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray),
+                                Margin = new Thickness(0, 0, 0, 15)
+                            };
+                            ContentPanel.Children.Add(directoryBlock);
+                            var chartsLabel = new TextBlock
+                            {
+                                Text = "Selected Charts:",
+                                FontSize = 16,
+                                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                                Margin = new Thickness(0, 0, 0, 10)
+                            };
+                            ContentPanel.Children.Add(chartsLabel);
+                            // Show selected charts
+                            var availableCharts = _chartService.GetAvailableCharts();
+                            foreach (var chartId in result.Record.SelectedChartIds)
+                            {
+                                var chart = availableCharts.FirstOrDefault(c => c.Id == chartId);
+                                if (chart != null)
+                                {
+                                    var chartBlock = new TextBlock
+                                    {
+                                        Text = $"• {chart.Name} - {chart.Description}",
+                                        FontSize = 14,
+                                        Margin = new Thickness(20, 2, 0, 2)
+                                    };
+                                    ContentPanel.Children.Add(chartBlock);
+                                }
+                            }
+                        }
+                        if (StatusTextBlock != null)
+                        {
+                            StatusTextBlock.Text = $"Record loaded successfully from: {result.Directory}";
+                            StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush
+                                (Microsoft.UI.Colors.Green);
+                        }
+
+                        if (OpenDirectoryButton != null && FileHistoryListView != null)
+                        {
+                            OpenDirectoryButton.IsEnabled = FileHistoryListView.SelectedItem != null;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -387,12 +457,12 @@ namespace coiled_tubing_app
                 if (_fileHistoryService != null)
                 {
                     _currentHistoryItems = await _fileHistoryService.GetHistoryAsync();
-                    
+
                     if (FileHistoryListView != null)
                     {
                         FileHistoryListView.ItemsSource = _currentHistoryItems;
                     }
-                    
+
                     if (HistoryStatusTextBlock != null)
                     {
                         if (_currentHistoryItems.Count == 0)
