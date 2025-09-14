@@ -6,6 +6,7 @@
     xmlns:local="using:coiled_tubing_app"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI"
     mc:Ignorable="d">
 
     <Grid Margin="20">
@@ -185,19 +186,39 @@
                 </Grid>
             </Border>
 
-            <!-- Detail View (Hidden by default) -->
-            <Border x:Name="DetailView"
+            <!-- Chart TabView (Hidden by default) -->
+            <Border x:Name="ChartTabView"
                     CornerRadius="8" 
                     BorderBrush="LightGray" 
                     BorderThickness="1" 
-                    Padding="20"
+                    Padding="10"
                     Visibility="Collapsed">
                 
-                <ScrollViewer>
-                    <StackPanel x:Name="DetailContentPanel">
-                        <!-- Detail content will be populated programmatically -->
-                    </StackPanel>
-                </ScrollViewer>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Record Title -->
+                    <TextBlock x:Name="RecordTitleTextBlock"
+                               Grid.Row="0"
+                               Text=""
+                               FontSize="20"
+                               FontWeight="Bold"
+                               Margin="10,0,0,15"
+                               Foreground="DarkBlue"/>
+
+                    <!-- TabView for Charts -->
+                    <TabView x:Name="ChartsTabView"
+                             Grid.Row="1"
+                             TabWidthMode="Equal"
+                             CanDragTabs="False"
+                             CanReorderTabs="False"
+                             IsAddTabButtonVisible="False">
+                        <!-- Tabs will be created dynamically in code-behind -->
+                    </TabView>
+                </Grid>
             </Border>
         </Grid>
 

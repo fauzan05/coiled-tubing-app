@@ -1,5 +1,7 @@
 using coiled_tubing_app.Models;
 using coiled_tubing_app.Services;
+using coiled_tubing_app.ViewModels;
+using LiveChartsCore.SkiaSharpView.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
@@ -15,7 +17,7 @@ namespace coiled_tubing_app
         private FileHistoryService? _fileHistoryService;
         private List<FileHistoryItem> _currentHistoryItems;
         private List<HistoryTableItem> _tableItems;
-        private bool _isInDetailView = false;
+        private bool _isInChartView = false;
         private HistoryTableItem? _currentDetailItem;
 
         public SensorPage()
@@ -262,13 +264,13 @@ namespace coiled_tubing_app
             {
                 if (HistoryDataGrid.SelectedItem is HistoryTableItem selectedItem)
                 {
-                    await ShowDetailView(selectedItem);
+                    await ShowChartTabView(selectedItem);
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"HistoryDataGrid_DoubleTapped error: {ex.Message}");
-                UpdateStatusText($"Error opening detail view: {ex.Message}", Microsoft.UI.Colors.Red);
+                UpdateStatusText($"Error opening chart view: {ex.Message}", Microsoft.UI.Colors.Red);
             }
         }
 
@@ -448,12 +450,12 @@ namespace coiled_tubing_app
             return preview;
         }
 
-        private async Task ShowDetailView(HistoryTableItem item)
+        private async Task ShowChartTabView(HistoryTableItem item)
         {
             try
             {
                 _currentDetailItem = item;
-                _isInDetailView = true;
+                _isInChartView = true;
 
                 // Load full record data
                 if (_chartService != null)
@@ -461,154 +463,162 @@ namespace coiled_tubing_app
                     var result = await _chartService.LoadRecordFromPathAsync(item.FilePath);
                     if (result.Record != null)
                     {
-                        await PopulateDetailView(result.Record, item.Directory);
+                        await PopulateChartTabs(result.Record);
                     }
                 }
 
-                // Switch to detail view
+                // Switch to chart view
                 HistoryTableView.Visibility = Visibility.Collapsed;
                 ActionButtonsPanel.Visibility = Visibility.Collapsed;
-                DetailView.Visibility = Visibility.Visible;
+                ChartTabView.Visibility = Visibility.Visible;
                 BackButton.Visibility = Visibility.Visible;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ShowDetailView error: {ex.Message}");
-                UpdateStatusText($"Error loading detail view: {ex.Message}", Microsoft.UI.Colors.Red);
+                System.Diagnostics.Debug.WriteLine($"ShowChartTabView error: {ex.Message}");
+                UpdateStatusText($"Error loading chart view: {ex.Message}", Microsoft.UI.Colors.Red);
             }
         }
 
         private void ShowTableView()
         {
-            _isInDetailView = false;
+            _isInChartView = false;
             _currentDetailItem = null;
 
             // Switch back to table view
-            DetailView.Visibility = Visibility.Collapsed;
+            ChartTabView.Visibility = Visibility.Collapsed;
             BackButton.Visibility = Visibility.Collapsed;
             HistoryTableView.Visibility = Visibility.Visible;
             ActionButtonsPanel.Visibility = Visibility.Visible;
+
+            // Clear tabs
+            ChartsTabView.TabItems.Clear();
         }
 
-        private async Task PopulateDetailView(ChartRecord record, string directory)
+        private async Task PopulateChartTabs(ChartRecord record)
         {
             try
             {
-                if (DetailContentPanel != null)
+                // Set record title
+                if (RecordTitleTextBlock != null)
                 {
-                    DetailContentPanel.Children.Clear();
+                    RecordTitleTextBlock.Text = record.RecordName;
+                }
 
-                    // Title
-                    var titleBlock = new TextBlock
+                // Clear existing tabs
+                ChartsTabView.TabItems.Clear();
+
+                var availableCharts = _chartService?.GetAvailableCharts() ?? new List<ChartItem>();
+
+                if (record.SelectedChartIds.Count == 0)
+                {
+                    // Create a "No Charts" tab
+                    var noChartsTab = new TabViewItem
                     {
-                        Text = record.RecordName,
-                        FontSize = 24,
-                        FontWeight = Microsoft.UI.Text.FontWeights.Bold,
-                        Margin = new Thickness(0, 0, 0, 20)
-                    };
-                    DetailContentPanel.Children.Add(titleBlock);
-
-                    // Record Information Section
-                    var infoSection = new StackPanel { Margin = new Thickness(0, 0, 0, 30) };
-
-                    var infoTitle = new TextBlock
-                    {
-                        Text = "Record Information",
-                        FontSize = 18,
-                        FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                        Margin = new Thickness(0, 0, 0, 15)
-                    };
-                    infoSection.Children.Add(infoTitle);
-
-                    var dateBlock = new TextBlock
-                    {
-                        Text = $"Created: {record.CreatedDate:yyyy-MM-dd HH:mm:ss}",
-                        FontSize = 14,
-                        Margin = new Thickness(0, 0, 0, 8)
-                    };
-                    infoSection.Children.Add(dateBlock);
-
-                    var directoryBlock = new TextBlock
-                    {
-                        Text = $"Location: {directory}",
-                        FontSize = 14,
-                        Margin = new Thickness(0, 0, 0, 8)
-                    };
-                    infoSection.Children.Add(directoryBlock);
-
-                    DetailContentPanel.Children.Add(infoSection);
-
-                    // Charts Section
-                    var chartsSection = new StackPanel();
-
-                    var chartsTitle = new TextBlock
-                    {
-                        Text = "Selected Charts",
-                        FontSize = 18,
-                        FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                        Margin = new Thickness(0, 0, 0, 15)
-                    };
-                    chartsSection.Children.Add(chartsTitle);
-
-                    var availableCharts = _chartService?.GetAvailableCharts() ?? new List<ChartItem>();
-
-                    if (record.SelectedChartIds.Count == 0)
-                    {
-                        var noChartsBlock = new TextBlock
+                        Header = "No Charts",
+                        IsClosable = false,  // Disable close button
+                        Content = new TextBlock
                         {
                             Text = "No charts selected for this record.",
-                            FontSize = 14,
-                            FontStyle = Windows.UI.Text.FontStyle.Italic,
+                            FontSize = 16,
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            VerticalAlignment = VerticalAlignment.Center,
                             Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray)
-                        };
-                        chartsSection.Children.Add(noChartsBlock);
-                    }
-                    else
+                        }
+                    };
+                    ChartsTabView.TabItems.Add(noChartsTab);
+                }
+                else
+                {
+                    // Create tabs for each selected chart
+                    foreach (var chartId in record.SelectedChartIds)
                     {
-                        foreach (var chartId in record.SelectedChartIds)
+                        var chart = availableCharts.FirstOrDefault(c => c.Id == chartId);
+                        if (chart != null)
                         {
-                            var chart = availableCharts.FirstOrDefault(c => c.Id == chartId);
-                            if (chart != null)
-                            {
-                                var chartBorder = new Border
-                                {
-                                    Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.LightBlue),
-                                    CornerRadius = new CornerRadius(6),
-                                    Padding = new Thickness(15, 10, 15, 10),
-                                    Margin = new Thickness(0, 0, 0, 10)
-                                };
-
-                                var chartContent = new StackPanel();
-
-                                var chartName = new TextBlock
-                                {
-                                    Text = chart.Name,
-                                    FontSize = 16,
-                                    FontWeight = Microsoft.UI.Text.FontWeights.SemiBold
-                                };
-                                chartContent.Children.Add(chartName);
-
-                                var chartDesc = new TextBlock
-                                {
-                                    Text = chart.Description,
-                                    FontSize = 14,
-                                    Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkBlue)
-                                };
-                                chartContent.Children.Add(chartDesc);
-
-                                chartBorder.Child = chartContent;
-                                chartsSection.Children.Add(chartBorder);
-                            }
+                            var chartViewModel = new ChartViewModel(chartId, chart.Name);
+                            var chartTab = CreateChartTab(chart.Name, chartViewModel);
+                            ChartsTabView.TabItems.Add(chartTab);
                         }
                     }
+                }
 
-                    DetailContentPanel.Children.Add(chartsSection);
+                // Select first tab
+                if (ChartsTabView.TabItems.Count > 0)
+                {
+                    ChartsTabView.SelectedIndex = 0;
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"PopulateDetailView error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"PopulateChartTabs error: {ex.Message}");
             }
+        }
+
+        private TabViewItem CreateChartTab(string chartName, ChartViewModel viewModel)
+        {
+            var tab = new TabViewItem
+            {
+                Header = chartName,
+                IsClosable = false  // Disable close button for this tab
+            };
+
+            // Create chart content based on chart type
+            var chartContainer = new Border
+            {
+                CornerRadius = new CornerRadius(8),
+                BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.LightGray),
+                BorderThickness = new Thickness(1),
+                Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White),
+                Padding = new Thickness(15),
+                Margin = new Thickness(10)
+            };
+
+            var chartGrid = new Grid();
+            chartGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            chartGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+            // Chart title
+            var titleBlock = new TextBlock
+            {
+                Text = chartName,
+                FontSize = 18,
+                FontWeight = Microsoft.UI.Text.FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 15),
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            Grid.SetRow(titleBlock, 0);
+            chartGrid.Children.Add(titleBlock);
+
+            // Create appropriate chart control based on chart type
+            FrameworkElement chartControl;
+
+            if (viewModel.ChartId == "sensor_status")
+            {
+                // Use PieChart for sensor status
+                chartControl = new PieChart
+                {
+                    Series = viewModel.Series,
+                    MinHeight = 300
+                };
+            }
+            else
+            {
+                // Use CartesianChart for other chart types
+                chartControl = new CartesianChart
+                {
+                    Series = viewModel.Series,
+                    MinHeight = 300
+                };
+            }
+
+            Grid.SetRow(chartControl, 1);
+            chartGrid.Children.Add(chartControl);
+
+            chartContainer.Child = chartGrid;
+            tab.Content = chartContainer;
+
+            return tab;
         }
     }
 }
