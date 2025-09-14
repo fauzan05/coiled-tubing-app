@@ -37,11 +37,15 @@ namespace coiled_tubing_app.Services
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"SaveRecordAsync: Starting save for record '{record.RecordName}'");
+                
                 // Convert record ke JSON
                 string jsonString = JsonSerializer.Serialize(record, new JsonSerializerOptions
                 {
                     WriteIndented = true
                 });
+
+                System.Diagnostics.Debug.WriteLine($"SaveRecordAsync: JSON serialized, length: {jsonString.Length}");
 
                 // Buat file picker untuk save
                 var savePicker = new FileSavePicker();
@@ -54,22 +58,37 @@ namespace coiled_tubing_app.Services
                 savePicker.FileTypeChoices.Add("FXZ Record", new List<string>() { ".fxz" });
                 savePicker.SuggestedFileName = $"{record.RecordName}.fxz";
 
+                System.Diagnostics.Debug.WriteLine($"SaveRecordAsync: Showing file picker with suggested name '{record.RecordName}.fxz'");
+
                 // User pilih lokasi save
                 StorageFile file = await savePicker.PickSaveFileAsync();
+                
                 if (file != null)
                 {
+                    System.Diagnostics.Debug.WriteLine($"SaveRecordAsync: User selected file: '{file.Path}'");
+                    
                     await FileIO.WriteTextAsync(file, jsonString);
+                    System.Diagnostics.Debug.WriteLine($"SaveRecordAsync: File written successfully");
 
-                    // Add to history
+                    // Add to history immediately after saving
+                    System.Diagnostics.Debug.WriteLine($"SaveRecordAsync: Adding to history...");
                     await _fileHistoryService.AddHistoryItemAsync(record.RecordName, file.Path, FileHistoryType.Created);
 
                     var directory = Path.GetDirectoryName(file.Path) ?? "";
+                    System.Diagnostics.Debug.WriteLine($"SaveRecordAsync: Success - FilePath: '{file.Path}', Directory: '{directory}'");
+                    
                     return (true, file.Path, directory);
                 }
-                return (false, "", "");
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("SaveRecordAsync: User cancelled file picker");
+                    return (false, "", "");
+                }
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"SaveRecordAsync error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"SaveRecordAsync stack trace: {ex.StackTrace}");
                 return (false, "", "");
             }
         }

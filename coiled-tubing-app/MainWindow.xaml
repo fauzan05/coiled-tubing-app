@@ -5,11 +5,11 @@
         Title="Coiled Tubing App">
 
     <NavigationView x:Name="nvSample9"
-                Header="Monitoring Sensor"
                 PaneDisplayMode="Left"
                 OpenPaneLength="200"
                 CompactPaneLength="60"
                 IsSettingsVisible="False"
+                IsBackButtonVisible="Collapsed"
                 SelectionChanged="NavView_Navigate">
         <NavigationView.MenuItems>
             <NavigationViewItem Content="Dashboard" Tag="DashboardPage">

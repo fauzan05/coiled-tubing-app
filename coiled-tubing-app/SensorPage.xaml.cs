@@ -4,7 +4,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,6 +14,9 @@ namespace coiled_tubing_app
         private ChartService? _chartService;
         private FileHistoryService? _fileHistoryService;
         private List<FileHistoryItem> _currentHistoryItems;
+        private List<HistoryTableItem> _tableItems;
+        private bool _isInDetailView = false;
+        private HistoryTableItem? _currentDetailItem;
 
         public SensorPage()
         {
@@ -22,6 +24,7 @@ namespace coiled_tubing_app
             {
                 InitializeComponent();
                 _currentHistoryItems = new List<FileHistoryItem>();
+                _tableItems = new List<HistoryTableItem>();
 
                 // Initialize services after the page is loaded to avoid blocking UI thread
                 Loaded += SensorPage_Loaded;
@@ -36,6 +39,9 @@ namespace coiled_tubing_app
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("SensorPage_Loaded: Starting initialization");
+                System.Diagnostics.Debug.WriteLine($"SensorPage_Loaded: StatusTextBlock is null = {StatusTextBlock == null}");
+
                 // Initialize services on UI thread
                 await InitializeServicesAsync();
                 await RefreshFileHistory();
@@ -43,11 +49,7 @@ namespace coiled_tubing_app
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"SensorPage_Loaded error: {ex.Message}");
-                if (StatusTextBlock != null)
-                {
-                    StatusTextBlock.Text = $"Warning: Some features may not work properly. {ex.Message}";
-                    StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Orange);
-                }
+                UpdateStatusText($"Warning: Some features may not work properly. {ex.Message}", Microsoft.UI.Colors.Orange);
             }
         }
 
@@ -61,14 +63,10 @@ namespace coiled_tubing_app
                     _chartService = new ChartService();
                     _fileHistoryService = _chartService.GetFileHistoryService();
 
-                    // Update UI on UI thread
+                    // Update UI on UI thread using our helper method
                     DispatcherQueue.TryEnqueue(() =>
                     {
-                        if (StatusTextBlock != null)
-                        {
-                            StatusTextBlock.Text = "Ready - All services initialized successfully";
-                            StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Green);
-                        }
+                        UpdateStatusText("Ready - All services initialized successfully", Microsoft.UI.Colors.Green);
                     });
                 }
                 catch (Exception ex)
@@ -85,6 +83,7 @@ namespace coiled_tubing_app
                     {
                         // Last resort - create minimal service instances
                         _currentHistoryItems = new List<FileHistoryItem>();
+                        _tableItems = new List<HistoryTableItem>();
                     }
 
                     throw; // Re-throw to be handled by caller
@@ -101,50 +100,49 @@ namespace coiled_tubing_app
                     await InitializeServicesAsync();
                 }
 
-                if (StatusTextBlock != null)
-                {
-                    StatusTextBlock.Text = "Opening chart selection...";
-                    StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Blue);
-                }
+                UpdateStatusText("Opening chart selection...", Microsoft.UI.Colors.Blue);
 
                 var dialog = new ChartSelectionDialog();
                 dialog.XamlRoot = this.XamlRoot;
 
                 var result = await dialog.ShowAsync();
 
-                if (result == ContentDialogResult.Primary)
+                System.Diagnostics.Debug.WriteLine($"AddRecordButton_Click: Dialog result = {result}");
+                System.Diagnostics.Debug.WriteLine($"AddRecordButton_Click: SavedFilePath = '{dialog.SavedFilePath}'");
+                System.Diagnostics.Debug.WriteLine($"AddRecordButton_Click: SavedDirectory = '{dialog.SavedDirectory}'");
+
+                // Check if file was saved successfully regardless of dialog result
+                bool fileWasSaved = !string.IsNullOrEmpty(dialog.SavedFilePath);
+
+                if (fileWasSaved)
                 {
-                    if (StatusTextBlock != null)
-                    {
-                        StatusTextBlock.Text = $"Record saved successfully! Directory: {dialog.SavedDirectory}";
-                        StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Green);
-                    }
+                    UpdateStatusText("Record saved successfully! Refreshing history...", Microsoft.UI.Colors.Blue);
 
-                    // Show directory automatically
-                    if (!string.IsNullOrEmpty(dialog.SavedDirectory))
-                    {
-                        await ShowDirectoryAsync(dialog.SavedDirectory);
-                    }
+                    // Force refresh service instance to get latest data
+                    _fileHistoryService = _chartService?.GetFileHistoryService();
 
-                    // Refresh history
+                    // Refresh history list
                     await RefreshFileHistory();
+
+                    // Update final status
+                    UpdateStatusText($"Record saved successfully!", Microsoft.UI.Colors.Green);
                 }
                 else
                 {
-                    if (StatusTextBlock != null)
+                    if (result == ContentDialogResult.Primary)
                     {
-                        StatusTextBlock.Text = "Operation cancelled.";
-                        StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Orange);
+                        UpdateStatusText("Save operation failed. Please try again.", Microsoft.UI.Colors.Red);
+                    }
+                    else
+                    {
+                        UpdateStatusText("Operation cancelled.", Microsoft.UI.Colors.Orange);
                     }
                 }
             }
             catch (Exception ex)
             {
-                if (StatusTextBlock != null)
-                {
-                    StatusTextBlock.Text = $"Error: {ex.Message}";
-                    StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
-                }
+                System.Diagnostics.Debug.WriteLine($"AddRecordButton_Click error: {ex.Message}");
+                UpdateStatusText($"Error: {ex.Message}", Microsoft.UI.Colors.Red);
             }
         }
 
@@ -157,101 +155,24 @@ namespace coiled_tubing_app
                     await InitializeServicesAsync();
                 }
 
-                if (StatusTextBlock != null)
-                {
-                    StatusTextBlock.Text = "Loading record...";
-                    StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Blue);
-                }
+                UpdateStatusText("Loading record...", Microsoft.UI.Colors.Blue);
 
                 var result = await _chartService.LoadRecordAsync();
 
                 if (result.Record != null)
                 {
-                    // Clear content panel
-                    if (ContentPanel != null)
-                    {
-                        ContentPanel.Children.Clear();
-
-                        // Show record info
-                        var titleBlock = new TextBlock
-                        {
-                            Text = $"Loaded Record: {result.Record.RecordName}",
-                            FontSize = 20,
-                            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                            Margin = new Thickness(0, 0, 0, 15)
-                        };
-                        ContentPanel.Children.Add(titleBlock);
-
-                        var dateBlock = new TextBlock
-                        {
-                            Text = $"Created: {result.Record.CreatedDate:yyyy-MM-dd HH:mm:ss}",
-                            FontSize = 14,
-                            Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray),
-                            Margin = new Thickness(0, 0, 0, 10)
-                        };
-                        ContentPanel.Children.Add(dateBlock);
-
-                        var directoryBlock = new TextBlock
-                        {
-                            Text = $"Directory: {result.Directory}",
-                            FontSize = 14,
-                            Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray),
-                            Margin = new Thickness(0, 0, 0, 15)
-                        };
-                        ContentPanel.Children.Add(directoryBlock);
-
-                        var chartsLabel = new TextBlock
-                        {
-                            Text = "Selected Charts:",
-                            FontSize = 16,
-                            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                            Margin = new Thickness(0, 0, 0, 10)
-                        };
-                        ContentPanel.Children.Add(chartsLabel);
-
-                        // Show selected charts
-                        var availableCharts = _chartService.GetAvailableCharts();
-                        foreach (var chartId in result.Record.SelectedChartIds)
-                        {
-                            var chart = availableCharts.FirstOrDefault(c => c.Id == chartId);
-                            if (chart != null)
-                            {
-                                var chartBlock = new TextBlock
-                                {
-                                    Text = $"• {chart.Name} - {chart.Description}",
-                                    FontSize = 14,
-                                    Margin = new Thickness(20, 2, 0, 2)
-                                };
-                                ContentPanel.Children.Add(chartBlock);
-                            }
-                        }
-                    }
-
-                    if (StatusTextBlock != null)
-                    {
-                        StatusTextBlock.Text = $"Record loaded successfully from: {result.Directory}";
-                        StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Green);
-                    }
-
-                    // Refresh history
+                    UpdateStatusText($"Record loaded successfully from: {result.Directory}", Microsoft.UI.Colors.Green);
+                    // Refresh history to show the loaded record
                     await RefreshFileHistory();
                 }
                 else
                 {
-                    if (StatusTextBlock != null)
-                    {
-                        StatusTextBlock.Text = "No file selected or failed to load.";
-                        StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Orange);
-                    }
+                    UpdateStatusText("No file selected or failed to load.", Microsoft.UI.Colors.Orange);
                 }
             }
             catch (Exception ex)
             {
-                if (StatusTextBlock != null)
-                {
-                    StatusTextBlock.Text = $"Error loading record: {ex.Message}";
-                    StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
-                }
+                UpdateStatusText($"Error loading record: {ex.Message}", Microsoft.UI.Colors.Red);
             }
         }
 
@@ -260,19 +181,11 @@ namespace coiled_tubing_app
             try
             {
                 await RefreshFileHistory();
-                if (StatusTextBlock != null)
-                {
-                    StatusTextBlock.Text = "File history refreshed.";
-                    StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Green);
-                }
+                UpdateStatusText("File history refreshed.", Microsoft.UI.Colors.Green);
             }
             catch (Exception ex)
             {
-                if (StatusTextBlock != null)
-                {
-                    StatusTextBlock.Text = $"Error refreshing history: {ex.Message}";
-                    StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
-                }
+                UpdateStatusText($"Error refreshing history: {ex.Message}", Microsoft.UI.Colors.Red);
             }
         }
 
@@ -299,154 +212,114 @@ namespace coiled_tubing_app
                 {
                     await _fileHistoryService.ClearHistoryAsync();
                     await RefreshFileHistory();
+                    UpdateStatusText("File history cleared.", Microsoft.UI.Colors.Green);
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusText($"Error clearing history: {ex.Message}", Microsoft.UI.Colors.Red);
+            }
+        }
+
+        private async void DeleteHistoryItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is Button button && button.Tag is HistoryTableItem tableItem)
+                {
+                    var dialog = new ContentDialog
+                    {
+                        Title = "Delete Record",
+                        Content = $"Are you sure you want to remove '{tableItem.RecordName}' from history?",
+                        PrimaryButtonText = "Delete",
+                        SecondaryButtonText = "Cancel",
+                        XamlRoot = this.XamlRoot
+                    };
+
+                    var result = await dialog.ShowAsync();
+                    if (result == ContentDialogResult.Primary)
+                    {
+                        if (_fileHistoryService == null)
+                        {
+                            await InitializeServicesAsync();
+                        }
+
+                        await _fileHistoryService.RemoveHistoryItemAsync(tableItem.OriginalItem);
+                        await RefreshFileHistory();
+                        UpdateStatusText("Record removed from history.", Microsoft.UI.Colors.Green);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusText($"Error removing record: {ex.Message}", Microsoft.UI.Colors.Red);
+            }
+        }
+
+        private async void HistoryDataGrid_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
+        {
+            try
+            {
+                if (HistoryDataGrid.SelectedItem is HistoryTableItem selectedItem)
+                {
+                    await ShowDetailView(selectedItem);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"HistoryDataGrid_DoubleTapped error: {ex.Message}");
+                UpdateStatusText($"Error opening detail view: {ex.Message}", Microsoft.UI.Colors.Red);
+            }
+        }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ShowTableView();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"BackButton_Click error: {ex.Message}");
+            }
+        }
+
+        // Helper method yang lebih robust untuk update status
+        private void UpdateStatusText(string message, Windows.UI.Color color)
+        {
+            try
+            {
+                // Try using DispatcherQueue to ensure we're on UI thread
+                DispatcherQueue.TryEnqueue(() =>
+                {
                     if (StatusTextBlock != null)
                     {
-                        StatusTextBlock.Text = "File history cleared.";
-                        StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Green);
+                        StatusTextBlock.Text = message;
+                        StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(color);
+                        System.Diagnostics.Debug.WriteLine($"UpdateStatusText: Successfully updated to '{message}'");
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                if (StatusTextBlock != null)
-                {
-                    StatusTextBlock.Text = $"Error clearing history: {ex.Message}";
-                    StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
-                }
-            }
-        }
-
-        private async void OpenDirectoryButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (FileHistoryListView?.SelectedItem is FileHistoryItem selectedItem)
-                {
-                    await ShowDirectoryAsync(selectedItem.Directory);
-                }
-            }
-            catch (Exception ex)
-            {
-                if (StatusTextBlock != null)
-                {
-                    StatusTextBlock.Text = $"Error opening directory: {ex.Message}";
-                    StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
-                }
-            }
-        }
-
-        private async void FileHistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            try
-            {
-                var selectedItem = FileHistoryListView?.SelectedItem as FileHistoryItem;
-                if (selectedItem != null)
-                {
-                    // menampilkan informasi seperti chartService.LoadRecordAsync();
-                    var result = await _chartService.LoadRecordFromPathAsync(selectedItem.FilePath);
-                    if (result.Record != null)
+                    else
                     {
-                        // Clear content panel
-                        if (ContentPanel != null)
-                        {
-                            ContentPanel.Children.Clear();
-                            // Show record info
-                            var titleBlock = new TextBlock
-                            {
-                                Text = $"Loaded Record: {result.Record.RecordName}",
-                                FontSize = 20,
-                                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                                Margin = new Thickness(0, 0, 0, 15)
-                            };
-                            ContentPanel.Children.Add(titleBlock);
-                            var dateBlock = new TextBlock
-                            {
-                                Text = $"Created: {result.Record.CreatedDate:yyyy-MM-dd HH:mm:ss}",
-                                FontSize = 14,
-                                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray),
-                                Margin = new Thickness(0, 0, 0, 10)
-                            };
-                            ContentPanel.Children.Add(dateBlock);
-                            var directoryBlock = new TextBlock
-                            {
-                                Text = $"Directory: {result.Directory}",
-                                FontSize = 14,
-                                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray),
-                                Margin = new Thickness(0, 0, 0, 15)
-                            };
-                            ContentPanel.Children.Add(directoryBlock);
-                            var chartsLabel = new TextBlock
-                            {
-                                Text = "Selected Charts:",
-                                FontSize = 16,
-                                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                                Margin = new Thickness(0, 0, 0, 10)
-                            };
-                            ContentPanel.Children.Add(chartsLabel);
-                            // Show selected charts
-                            var availableCharts = _chartService.GetAvailableCharts();
-                            foreach (var chartId in result.Record.SelectedChartIds)
-                            {
-                                var chart = availableCharts.FirstOrDefault(c => c.Id == chartId);
-                                if (chart != null)
-                                {
-                                    var chartBlock = new TextBlock
-                                    {
-                                        Text = $"• {chart.Name} - {chart.Description}",
-                                        FontSize = 14,
-                                        Margin = new Thickness(20, 2, 0, 2)
-                                    };
-                                    ContentPanel.Children.Add(chartBlock);
-                                }
-                            }
-                        }
-                        if (StatusTextBlock != null)
-                        {
-                            StatusTextBlock.Text = $"Record loaded successfully from: {result.Directory}";
-                            StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush
-                                (Microsoft.UI.Colors.Green);
-                        }
+                        System.Diagnostics.Debug.WriteLine($"UpdateStatusText: StatusTextBlock is NULL, message was '{message}'");
 
-                        if (OpenDirectoryButton != null && FileHistoryListView != null)
+                        // Try to find StatusTextBlock by name as fallback
+                        var statusBlock = this.FindName("StatusTextBlock") as TextBlock;
+                        if (statusBlock != null)
                         {
-                            OpenDirectoryButton.IsEnabled = FileHistoryListView.SelectedItem != null;
+                            statusBlock.Text = message;
+                            statusBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(color);
+                            System.Diagnostics.Debug.WriteLine($"UpdateStatusText: Found StatusTextBlock by name and updated");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"UpdateStatusText: Could not find StatusTextBlock by name either");
                         }
                     }
-                }
+                });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"FileHistoryListView_SelectionChanged error: {ex.Message}");
-            }
-        }
-
-        private async void RemoveHistoryItem_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (_fileHistoryService == null)
-                {
-                    await InitializeServicesAsync();
-                }
-
-                if (sender is Button button && button.Tag is FileHistoryItem item)
-                {
-                    await _fileHistoryService.RemoveHistoryItemAsync(item);
-                    await RefreshFileHistory();
-                    if (StatusTextBlock != null)
-                    {
-                        StatusTextBlock.Text = "File removed from history.";
-                        StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Green);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                if (StatusTextBlock != null)
-                {
-                    StatusTextBlock.Text = $"Error removing file: {ex.Message}";
-                    StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
-                }
+                System.Diagnostics.Debug.WriteLine($"UpdateStatusText error: {ex.Message}");
             }
         }
 
@@ -454,26 +327,28 @@ namespace coiled_tubing_app
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("RefreshFileHistory: Starting...");
+
                 if (_fileHistoryService != null)
                 {
                     _currentHistoryItems = await _fileHistoryService.GetHistoryAsync();
+                    await ConvertToTableItems();
 
-                    if (FileHistoryListView != null)
+                    if (HistoryDataGrid != null)
                     {
-                        FileHistoryListView.ItemsSource = _currentHistoryItems;
+                        HistoryDataGrid.ItemsSource = null;
+                        HistoryDataGrid.ItemsSource = _tableItems;
                     }
 
                     if (HistoryStatusTextBlock != null)
                     {
-                        if (_currentHistoryItems.Count == 0)
+                        if (_tableItems.Count == 0)
                         {
-                            HistoryStatusTextBlock.Text = "No files in history";
-                            HistoryStatusTextBlock.Visibility = Visibility.Visible;
+                            HistoryStatusTextBlock.Text = "No records in history";
                         }
                         else
                         {
-                            HistoryStatusTextBlock.Text = $"{_currentHistoryItems.Count} file(s) in history";
-                            HistoryStatusTextBlock.Visibility = Visibility.Visible;
+                            HistoryStatusTextBlock.Text = $"{_tableItems.Count} record(s) in history";
                         }
                     }
                 }
@@ -482,7 +357,6 @@ namespace coiled_tubing_app
                     if (HistoryStatusTextBlock != null)
                     {
                         HistoryStatusTextBlock.Text = "History service not available";
-                        HistoryStatusTextBlock.Visibility = Visibility.Visible;
                     }
                 }
             }
@@ -492,33 +366,248 @@ namespace coiled_tubing_app
                 if (HistoryStatusTextBlock != null)
                 {
                     HistoryStatusTextBlock.Text = $"Error loading history: {ex.Message}";
-                    HistoryStatusTextBlock.Visibility = Visibility.Visible;
                 }
             }
         }
 
-        private async Task ShowDirectoryAsync(string directoryPath)
+        private async Task ConvertToTableItems()
         {
             try
             {
-                if (!string.IsNullOrEmpty(directoryPath))
+                _tableItems.Clear();
+                var availableCharts = _chartService?.GetAvailableCharts() ?? new List<ChartItem>();
+
+                for (int i = 0; i < _currentHistoryItems.Count; i++)
                 {
-                    Process.Start(new ProcessStartInfo
+                    var item = _currentHistoryItems[i];
+
+                    // Load chart IDs from file to get preview
+                    var chartIds = await GetChartIdsFromFile(item.FilePath);
+                    var chartsPreview = GetChartsPreview(chartIds, availableCharts);
+
+                    var tableItem = new HistoryTableItem
                     {
-                        FileName = "explorer.exe",
-                        Arguments = $"\"{directoryPath}\"",
-                        UseShellExecute = true
-                    });
+                        RowNumber = i + 1,
+                        RecordName = item.RecordName,
+                        ChartsPreview = chartsPreview,
+                        LastAccessed = item.LastAccessed,
+                        FilePath = item.FilePath,
+                        Directory = item.Directory,
+                        HistoryType = item.HistoryType,
+                        SelectedChartIds = chartIds,
+                        OriginalItem = item
+                    };
+
+                    _tableItems.Add(tableItem);
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ShowDirectoryAsync error: {ex.Message}");
-                if (StatusTextBlock != null)
+                System.Diagnostics.Debug.WriteLine($"ConvertToTableItems error: {ex.Message}");
+            }
+        }
+
+        private async Task<List<string>> GetChartIdsFromFile(string filePath)
+        {
+            try
+            {
+                if (_chartService != null)
                 {
-                    StatusTextBlock.Text = $"Could not open directory: {ex.Message}";
-                    StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
+                    var result = await _chartService.LoadRecordFromPathAsync(filePath);
+                    return result.Record?.SelectedChartIds ?? new List<string>();
                 }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GetChartIdsFromFile error: {ex.Message}");
+            }
+            return new List<string>();
+        }
+
+        private string GetChartsPreview(List<string> chartIds, List<ChartItem> availableCharts)
+        {
+            if (chartIds.Count == 0)
+                return "No charts selected";
+
+            var chartNames = new List<string>();
+            foreach (var id in chartIds.Take(2)) // Show max 2 charts in preview
+            {
+                var chart = availableCharts.FirstOrDefault(c => c.Id == id);
+                if (chart != null)
+                {
+                    chartNames.Add(chart.Name);
+                }
+            }
+
+            var preview = string.Join(", ", chartNames);
+            if (chartIds.Count > 2)
+            {
+                preview += $" (+{chartIds.Count - 2} more)";
+            }
+
+            return preview;
+        }
+
+        private async Task ShowDetailView(HistoryTableItem item)
+        {
+            try
+            {
+                _currentDetailItem = item;
+                _isInDetailView = true;
+
+                // Load full record data
+                if (_chartService != null)
+                {
+                    var result = await _chartService.LoadRecordFromPathAsync(item.FilePath);
+                    if (result.Record != null)
+                    {
+                        await PopulateDetailView(result.Record, item.Directory);
+                    }
+                }
+
+                // Switch to detail view
+                HistoryTableView.Visibility = Visibility.Collapsed;
+                ActionButtonsPanel.Visibility = Visibility.Collapsed;
+                DetailView.Visibility = Visibility.Visible;
+                BackButton.Visibility = Visibility.Visible;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ShowDetailView error: {ex.Message}");
+                UpdateStatusText($"Error loading detail view: {ex.Message}", Microsoft.UI.Colors.Red);
+            }
+        }
+
+        private void ShowTableView()
+        {
+            _isInDetailView = false;
+            _currentDetailItem = null;
+
+            // Switch back to table view
+            DetailView.Visibility = Visibility.Collapsed;
+            BackButton.Visibility = Visibility.Collapsed;
+            HistoryTableView.Visibility = Visibility.Visible;
+            ActionButtonsPanel.Visibility = Visibility.Visible;
+        }
+
+        private async Task PopulateDetailView(ChartRecord record, string directory)
+        {
+            try
+            {
+                if (DetailContentPanel != null)
+                {
+                    DetailContentPanel.Children.Clear();
+
+                    // Title
+                    var titleBlock = new TextBlock
+                    {
+                        Text = record.RecordName,
+                        FontSize = 24,
+                        FontWeight = Microsoft.UI.Text.FontWeights.Bold,
+                        Margin = new Thickness(0, 0, 0, 20)
+                    };
+                    DetailContentPanel.Children.Add(titleBlock);
+
+                    // Record Information Section
+                    var infoSection = new StackPanel { Margin = new Thickness(0, 0, 0, 30) };
+
+                    var infoTitle = new TextBlock
+                    {
+                        Text = "Record Information",
+                        FontSize = 18,
+                        FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                        Margin = new Thickness(0, 0, 0, 15)
+                    };
+                    infoSection.Children.Add(infoTitle);
+
+                    var dateBlock = new TextBlock
+                    {
+                        Text = $"Created: {record.CreatedDate:yyyy-MM-dd HH:mm:ss}",
+                        FontSize = 14,
+                        Margin = new Thickness(0, 0, 0, 8)
+                    };
+                    infoSection.Children.Add(dateBlock);
+
+                    var directoryBlock = new TextBlock
+                    {
+                        Text = $"Location: {directory}",
+                        FontSize = 14,
+                        Margin = new Thickness(0, 0, 0, 8)
+                    };
+                    infoSection.Children.Add(directoryBlock);
+
+                    DetailContentPanel.Children.Add(infoSection);
+
+                    // Charts Section
+                    var chartsSection = new StackPanel();
+
+                    var chartsTitle = new TextBlock
+                    {
+                        Text = "Selected Charts",
+                        FontSize = 18,
+                        FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                        Margin = new Thickness(0, 0, 0, 15)
+                    };
+                    chartsSection.Children.Add(chartsTitle);
+
+                    var availableCharts = _chartService?.GetAvailableCharts() ?? new List<ChartItem>();
+
+                    if (record.SelectedChartIds.Count == 0)
+                    {
+                        var noChartsBlock = new TextBlock
+                        {
+                            Text = "No charts selected for this record.",
+                            FontSize = 14,
+                            FontStyle = Windows.UI.Text.FontStyle.Italic,
+                            Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray)
+                        };
+                        chartsSection.Children.Add(noChartsBlock);
+                    }
+                    else
+                    {
+                        foreach (var chartId in record.SelectedChartIds)
+                        {
+                            var chart = availableCharts.FirstOrDefault(c => c.Id == chartId);
+                            if (chart != null)
+                            {
+                                var chartBorder = new Border
+                                {
+                                    Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.LightBlue),
+                                    CornerRadius = new CornerRadius(6),
+                                    Padding = new Thickness(15, 10, 15, 10),
+                                    Margin = new Thickness(0, 0, 0, 10)
+                                };
+
+                                var chartContent = new StackPanel();
+
+                                var chartName = new TextBlock
+                                {
+                                    Text = chart.Name,
+                                    FontSize = 16,
+                                    FontWeight = Microsoft.UI.Text.FontWeights.SemiBold
+                                };
+                                chartContent.Children.Add(chartName);
+
+                                var chartDesc = new TextBlock
+                                {
+                                    Text = chart.Description,
+                                    FontSize = 14,
+                                    Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkBlue)
+                                };
+                                chartContent.Children.Add(chartDesc);
+
+                                chartBorder.Child = chartContent;
+                                chartsSection.Children.Add(chartBorder);
+                            }
+                        }
+                    }
+
+                    DetailContentPanel.Children.Add(chartsSection);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"PopulateDetailView error: {ex.Message}");
             }
         }
     }

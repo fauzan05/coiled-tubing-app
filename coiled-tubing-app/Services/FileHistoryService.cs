@@ -44,16 +44,28 @@ namespace coiled_tubing_app.Services
         {
             if (!_isInitialized)
             {
+                System.Diagnostics.Debug.WriteLine("GetHistoryAsync: Loading history for first time");
                 await LoadHistoryAsync();
                 _isInitialized = true;
             }
-            return _historyItems.OrderByDescending(x => x.LastAccessed).ToList();
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("GetHistoryAsync: History already initialized, reloading from file");
+                // Force reload from file to ensure we have latest data
+                await LoadHistoryAsync();
+            }
+            
+            var result = _historyItems.OrderByDescending(x => x.LastAccessed).ToList();
+            System.Diagnostics.Debug.WriteLine($"GetHistoryAsync: Returning {result.Count} items");
+            return result;
         }
 
         public async Task AddHistoryItemAsync(string recordName, string filePath, FileHistoryType historyType)
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"AddHistoryItemAsync: Adding {recordName} at {filePath}");
+                
                 if (!_isInitialized)
                 {
                     await LoadHistoryAsync();
@@ -63,7 +75,12 @@ namespace coiled_tubing_app.Services
                 var directory = Path.GetDirectoryName(filePath) ?? "";
                 
                 // Remove existing item with same file path if exists
+                var existingCount = _historyItems.Count;
                 _historyItems.RemoveAll(x => x.FilePath == filePath);
+                if (_historyItems.Count < existingCount)
+                {
+                    System.Diagnostics.Debug.WriteLine($"AddHistoryItemAsync: Removed existing entry for {filePath}");
+                }
 
                 // Add new item
                 var historyItem = new FileHistoryItem
@@ -76,7 +93,10 @@ namespace coiled_tubing_app.Services
                 };
 
                 _historyItems.Add(historyItem);
+                System.Diagnostics.Debug.WriteLine($"AddHistoryItemAsync: Added item, total count now: {_historyItems.Count}");
+                
                 await SaveHistoryAsync();
+                System.Diagnostics.Debug.WriteLine($"AddHistoryItemAsync: Saved to file");
             }
             catch (Exception ex)
             {
@@ -159,12 +179,22 @@ namespace coiled_tubing_app.Services
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"SaveHistorySync: Saving {_historyItems.Count} items to {_historyFilePath}");
+                
                 var jsonContent = JsonSerializer.Serialize(_historyItems, new JsonSerializerOptions
                 {
                     WriteIndented = true
                 });
                 
                 File.WriteAllText(_historyFilePath, jsonContent);
+                System.Diagnostics.Debug.WriteLine($"SaveHistorySync: Successfully saved to file");
+                
+                // Verify the file was written
+                if (File.Exists(_historyFilePath))
+                {
+                    var fileContent = File.ReadAllText(_historyFilePath);
+                    System.Diagnostics.Debug.WriteLine($"SaveHistorySync: File exists, content length: {fileContent.Length}");
+                }
             }
             catch (Exception ex)
             {

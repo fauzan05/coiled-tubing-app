@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace coiled_tubing_app
 {
@@ -24,19 +23,19 @@ namespace coiled_tubing_app
         {
             _chartService = new ChartService();
             _charts = _chartService.GetAvailableCharts();
-            
+
             // Setup dialog properties
             this.Title = "Select Charts";
             this.PrimaryButtonText = "Save";
             this.SecondaryButtonText = "Cancel";
-            
+
             // Create UI elements
             var mainGrid = new Grid
             {
-                Width = 500,
+                Width = 400,
                 Height = 400
             };
-            
+
             // Add row definitions
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -47,19 +46,19 @@ namespace coiled_tubing_app
             {
                 Margin = new Thickness(0, 0, 0, 20)
             };
-            
+
             var nameLabel = new TextBlock
             {
                 Text = "Record Name:",
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                 Margin = new Thickness(0, 0, 0, 5)
             };
-            
+
             _recordNameTextBox = new TextBox
             {
                 PlaceholderText = "Enter record name..."
             };
-            
+
             namePanel.Children.Add(nameLabel);
             namePanel.Children.Add(_recordNameTextBox);
             Grid.SetRow(namePanel, 0);
@@ -80,7 +79,7 @@ namespace coiled_tubing_app
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(10)
             };
-            
+
             _chartsPanel = new StackPanel();
             scrollViewer.Content = _chartsPanel;
             Grid.SetRow(scrollViewer, 2);
@@ -89,12 +88,12 @@ namespace coiled_tubing_app
             mainGrid.Children.Add(namePanel);
             mainGrid.Children.Add(chartsTitle);
             mainGrid.Children.Add(scrollViewer);
-            
+
             // Set content
             this.Content = mainGrid;
-            
+
             LoadCharts();
-            
+
             // Event handler untuk tombol save
             this.PrimaryButtonClick += OnSaveButtonClick;
         }
@@ -110,55 +109,102 @@ namespace coiled_tubing_app
                     Tag = chart.Id,
                     Margin = new Thickness(0, 5, 0, 5)
                 };
-                
+
                 _chartsPanel.Children.Add(checkBox);
             }
         }
 
         private async void OnSaveButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
-            // Validasi nama record
-            string recordName = _recordNameTextBox.Text?.Trim() ?? "";
-            if (string.IsNullOrEmpty(recordName))
+            try
             {
-                args.Cancel = true;
-                return;
-            }
+                System.Diagnostics.Debug.WriteLine("OnSaveButtonClick: Starting...");
 
-            // Ambil chart yang dipilih
-            var selectedChartIds = new List<string>();
-            foreach (var child in _chartsPanel.Children)
-            {
-                if (child is CheckBox checkBox && checkBox.IsChecked == true && checkBox.Tag != null)
+                // Set default values first to prevent null reference
+                SavedFilePath = "";
+                SavedDirectory = "";
+
+                // Validasi nama record
+                string recordName = _recordNameTextBox.Text?.Trim() ?? "";
+                System.Diagnostics.Debug.WriteLine($"OnSaveButtonClick: RecordName = '{recordName}'");
+
+                if (string.IsNullOrEmpty(recordName))
                 {
-                    selectedChartIds.Add(checkBox.Tag.ToString()!);
+                    System.Diagnostics.Debug.WriteLine("OnSaveButtonClick: RecordName is empty, cancelling");
+                    args.Cancel = true;
+                    return;
+                }
+
+                // Ambil chart yang dipilih
+                var selectedChartIds = new List<string>();
+                foreach (var child in _chartsPanel.Children)
+                {
+                    if (child is CheckBox checkBox && checkBox.IsChecked == true && checkBox.Tag != null)
+                    {
+                        selectedChartIds.Add(checkBox.Tag.ToString()!);
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"OnSaveButtonClick: Selected {selectedChartIds.Count} charts");
+
+                if (selectedChartIds.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("OnSaveButtonClick: No charts selected, cancelling");
+                    args.Cancel = true;
+                    return;
+                }
+
+                // Buat record
+                var record = new ChartRecord
+                {
+                    RecordName = recordName,
+                    SelectedChartIds = selectedChartIds,
+                    CreatedDate = DateTime.Now
+                };
+
+                System.Diagnostics.Debug.WriteLine("OnSaveButtonClick: Calling SaveRecordAsync...");
+
+                // Defer the dialog closing until async operation completes
+                args.Cancel = true; // Cancel the default close behavior
+
+                try
+                {
+                    // Simpan file dengan return value yang baru
+                    var result = await _chartService.SaveRecordAsync(record);
+
+                    System.Diagnostics.Debug.WriteLine($"OnSaveButtonClick: SaveRecordAsync result:");
+                    System.Diagnostics.Debug.WriteLine($"  - Success: {result.Success}");
+                    System.Diagnostics.Debug.WriteLine($"  - FilePath: '{result.FilePath}'");
+                    System.Diagnostics.Debug.WriteLine($"  - Directory: '{result.Directory}'");
+
+                    if (result.Success)
+                    {
+                        SavedFilePath = result.FilePath;
+                        SavedDirectory = result.Directory;
+                        System.Diagnostics.Debug.WriteLine($"OnSaveButtonClick: Dialog properties set:");
+                        System.Diagnostics.Debug.WriteLine($"  - SavedFilePath: '{SavedFilePath}'");
+                        System.Diagnostics.Debug.WriteLine($"  - SavedDirectory: '{SavedDirectory}'");
+
+                        // Close dialog with Primary result after successful save
+                        this.Hide();
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("OnSaveButtonClick: Save failed, dialog remains open");
+                        // Dialog stays open for user to try again
+                    }
+                }
+                catch (Exception saveEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"OnSaveButtonClick: SaveRecordAsync exception: {saveEx.Message}");
+                    // Dialog stays open for user to try again
                 }
             }
-
-            if (selectedChartIds.Count == 0)
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"OnSaveButtonClick error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"OnSaveButtonClick stack trace: {ex.StackTrace}");
                 args.Cancel = true;
-                return;
-            }
-
-            // Buat record
-            var record = new ChartRecord
-            {
-                RecordName = recordName,
-                SelectedChartIds = selectedChartIds,
-                CreatedDate = DateTime.Now
-            };
-
-            // Simpan file dengan return value yang baru
-            var result = await _chartService.SaveRecordAsync(record);
-            if (!result.Success)
-            {
-                args.Cancel = true;
-            }
-            else
-            {
-                SavedFilePath = result.FilePath;
-                SavedDirectory = result.Directory;
             }
         }
     }

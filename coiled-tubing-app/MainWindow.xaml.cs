@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
+using System.Linq;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -15,8 +16,37 @@ namespace coiled_tubing_app
         public MainWindow()
         {
             InitializeComponent();
+            
+            // Navigate to default page
             Page page = new DashboardPage();
             contentFrame9.Navigate(page.GetType(), null, new EntranceNavigationTransitionInfo());
+            
+            // Set default selected item di NavigationView
+            SetSelectedNavigationItem("DashboardPage");
+        }
+
+        private void SetSelectedNavigationItem(string tag)
+        {
+            // Cari item di MenuItems
+            var menuItem = nvSample9.MenuItems
+                .OfType<NavigationViewItem>()
+                .FirstOrDefault(item => item.Tag?.ToString() == tag);
+
+            if (menuItem != null)
+            {
+                nvSample9.SelectedItem = menuItem;
+                return;
+            }
+
+            // Jika tidak ditemukan di MenuItems, coba di FooterMenuItems
+            var footerItem = nvSample9.FooterMenuItems
+                .OfType<NavigationViewItem>()
+                .FirstOrDefault(item => item.Tag?.ToString() == tag);
+
+            if (footerItem != null)
+            {
+                nvSample9.SelectedItem = footerItem;
+            }
         }
 
         private void OpenLoginWindow(object sender, RoutedEventArgs e)
