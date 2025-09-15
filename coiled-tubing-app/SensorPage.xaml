@@ -20,11 +20,11 @@
         <!-- Header -->
         <Grid Grid.Row="0" Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition x:Name="ColumnSensorPage_TitleView"/>
+                <ColumnDefinition x:Name="ColumnSensorPage_ActionButtonView"/>
             </Grid.ColumnDefinitions>
             
-            <StackPanel Grid.Column="0">
+            <StackPanel Grid.Column="0" x:Name="SensorPage_TitleView">
                 <TextBlock Text="Chart Record Management" 
                            FontSize="28" 
                            FontWeight="Bold" 
@@ -35,14 +35,18 @@
                            Foreground="Green"/>
             </StackPanel>
             
-            <!-- Back Button (Hidden by default) -->
-            <Button x:Name="BackButton"
-                    Grid.Column="1"
-                    Content="← Back"
-                    Click="BackButton_Click"
-                    Padding="15,8"
-                    Style="{StaticResource AccentButtonStyle}"
-                    Visibility="Collapsed"/>
+            <!-- Action Button (Hidden by default) -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" x:Name="ActionButton_ChartTabView" Visibility="Collapsed">
+                <Button HorizontalAlignment="Left" Margin="0, 0, 10, 0" Content="General Data" 
+                        Style="{StaticResource AccentButtonStyle}"
+                        Click="GeneralDataButton_Click"
+                        />
+                <Button HorizontalAlignment="Right" x:Name="BackButton"
+                        Content="← Back"
+                        Click="BackButton_Click"
+                        />
+            </StackPanel>
+
         </Grid>
 
         <!-- Action Buttons -->
@@ -193,7 +197,7 @@
                     BorderThickness="1" 
                     Padding="10"
                     Visibility="Collapsed">
-                
+
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -228,7 +232,8 @@
                 Padding="15,8" 
                 Margin="0,20,0,0"
                 BorderBrush="LightGray"
-                BorderThickness="1">
+                BorderThickness="1"
+                x:Name="HistoryStatusTextBlockContainer">
             <TextBlock x:Name="HistoryStatusTextBlock"
                        Text="No files in history"
                        FontSize="12"

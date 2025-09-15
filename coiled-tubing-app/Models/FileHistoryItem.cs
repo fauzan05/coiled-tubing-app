@@ -14,6 +14,7 @@ namespace coiled_tubing_app.Models
     public enum FileHistoryType
     {
         Created,
-        Loaded
+        Loaded,
+        Updated
     }
 }

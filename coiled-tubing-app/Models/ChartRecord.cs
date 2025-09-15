@@ -8,5 +8,6 @@ namespace coiled_tubing_app.Models
         public string RecordName { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public List<string> SelectedChartIds { get; set; } = new List<string>();
+        public GeneralData GeneralData { get; set; } = new GeneralData();
     }
 }

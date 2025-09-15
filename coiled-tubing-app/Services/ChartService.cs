@@ -93,6 +93,42 @@ namespace coiled_tubing_app.Services
             }
         }
 
+        // Overload untuk save ke path yang sudah ada (untuk update existing record)
+        public async Task<(bool Success, string FilePath, string Directory)> SaveRecordToPathAsync(ChartRecord record, string filePath)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"SaveRecordToPathAsync: Starting save for record '{record.RecordName}' to '{filePath}'");
+                
+                // Convert record ke JSON
+                string jsonString = JsonSerializer.Serialize(record, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                System.Diagnostics.Debug.WriteLine($"SaveRecordToPathAsync: JSON serialized, length: {jsonString.Length}");
+
+                // Write to existing file
+                var file = await StorageFile.GetFileFromPathAsync(filePath);
+                await FileIO.WriteTextAsync(file, jsonString);
+                System.Diagnostics.Debug.WriteLine($"SaveRecordToPathAsync: File written successfully");
+
+                // Add to history
+                await _fileHistoryService.AddHistoryItemAsync(record.RecordName, filePath, FileHistoryType.Updated);
+
+                var directory = Path.GetDirectoryName(filePath) ?? "";
+                System.Diagnostics.Debug.WriteLine($"SaveRecordToPathAsync: Success - FilePath: '{filePath}', Directory: '{directory}'");
+                
+                return (true, filePath, directory);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SaveRecordToPathAsync error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"SaveRecordToPathAsync stack trace: {ex.StackTrace}");
+                return (false, "", "");
+            }
+        }
+
         // Load record dari file .fxz dan return record dengan file info
         public async Task<(ChartRecord? Record, string FilePath, string Directory)> LoadRecordAsync()
         {
@@ -115,6 +151,12 @@ namespace coiled_tubing_app.Services
 
                     if (record != null)
                     {
+                        // Ensure GeneralData is not null for backward compatibility
+                        if (record.GeneralData == null)
+                        {
+                            record.GeneralData = new GeneralData();
+                        }
+
                         // Add to history
                         await _fileHistoryService.AddHistoryItemAsync(record.RecordName, file.Path, FileHistoryType.Loaded);
 
@@ -146,6 +188,12 @@ namespace coiled_tubing_app.Services
                     var record = JsonSerializer.Deserialize<ChartRecord>(jsonString);
                     if (record != null)
                     {
+                        // Ensure GeneralData is not null for backward compatibility
+                        if (record.GeneralData == null)
+                        {
+                            record.GeneralData = new GeneralData();
+                        }
+
                         // Add to history
                         await _fileHistoryService.AddHistoryItemAsync(record.RecordName, filePath, FileHistoryType.Loaded);
                         return (record, filePath, Path.GetDirectoryName(filePath) ?? "");
