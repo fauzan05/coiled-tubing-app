@@ -30,39 +30,25 @@ namespace coiled_tubing_app
             this.Title = "General Data";
             this.PrimaryButtonText = "Save";
             this.SecondaryButtonText = "Cancel";
-            
-            // MENGATUR WIDTH PADA CONTENTDIALOG LANGSUNG
-            this.MinWidth = 900;
-            this.MaxWidth = 1200;
-            this.Width = 900;
-            
-            // Atau bisa juga menggunakan DefaultButtonStyle untuk mengatur ukuran
-            // this.RequestedTheme = ElementTheme.Default;
 
             // ScrollViewer tidak perlu width karena akan mengikuti ContentDialog
             var scrollViewer = new ScrollViewer
             {
-                // Width = 900,  // HAPUS INI - tidak perlu lagi
-                Height = 600,
+                Height = double.NaN, // Auto height
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                Margin = new Thickness(10),
-                Padding = new Thickness(15),
-                HorizontalAlignment = HorizontalAlignment.Stretch // Agar mengisi seluruh width ContentDialog
-            };
-
-            var mainBorder = new Border
-            {
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(20),
                 Margin = new Thickness(5),
-                HorizontalAlignment = HorizontalAlignment.Stretch // Agar mengisi seluruh width
+                Padding = new Thickness(5),
+                HorizontalAlignment = HorizontalAlignment.Stretch, // Agar mengisi seluruh width ContentDialog
+                Width = 450,
             };
 
             var mainPanel = new StackPanel
             {
-                Spacing = 8,
-                HorizontalAlignment = HorizontalAlignment.Stretch // Agar mengisi seluruh width
+                //Spacing = 5,
+                HorizontalAlignment = HorizontalAlignment.Stretch, // Agar mengisi seluruh width
+                Width = 1500,
+                Height = double.NaN // Auto height
             };
 
             // Initialize all text boxes
@@ -99,10 +85,13 @@ namespace coiled_tubing_app
             mainPanel.Children.Add(CreateFormFieldGrid("BJ Representative:", _bjRepresentativeTextBox));
             mainPanel.Children.Add(CreateFormFieldGrid("Job Number:", _jobNumberTextBox));
 
-            mainBorder.Child = mainPanel;
-            scrollViewer.Content = mainBorder;
+            scrollViewer.Content = mainPanel;
+            this.Height = 500;
+            this.MaxHeight = 600;
             this.Content = scrollViewer;
-
+            // Set to center
+            this.HorizontalAlignment = HorizontalAlignment.Center;
+            this.VerticalAlignment = VerticalAlignment.Center;
             // Event handler for save button
             this.PrimaryButtonClick += OnSaveButtonClick;
         }
@@ -139,7 +128,7 @@ namespace coiled_tubing_app
                 Height = 32,
                 MinWidth = 100,
                 BorderThickness = new Thickness(1),
-                //Padding = new Thickness(4, 2, 4, 2),
+                Padding = new Thickness(4, 2, 4, 2),
                 FontSize = 13,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Stretch
@@ -155,8 +144,8 @@ namespace coiled_tubing_app
             };
 
             // Mengatur width kolom - sesuaikan dengan kebutuhan
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) }); // Label width
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // TextBox width
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) }); // Label width
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(245) }); // TextBox width
 
             var labelBlock = new TextBlock
             {
@@ -164,7 +153,7 @@ namespace coiled_tubing_app
                 FontWeight = Microsoft.UI.Text.FontWeights.Normal,
                 FontSize = 13,
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 10, 0)
+                Margin = new Thickness(0, 0, 2, 0)
             };
 
             Grid.SetColumn(labelBlock, 0);
