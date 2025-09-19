@@ -674,7 +674,6 @@ namespace coiled_tubing_app
                 CornerRadius = new CornerRadius(8),
                 BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.LightGray),
                 BorderThickness = new Thickness(1),
-                Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White),
                 Padding = new Thickness(15),
                 Margin = new Thickness(10)
             };

@@ -1,0 +1,43 @@
+End-User License Agreement (EULA)
+
+Coiled Tubing Operations App
+Version 1.0.0
+
+Copyright (C) 2024 Your Company Name. All rights reserved.
+
+IMPORTANT - READ CAREFULLY: This End-User License Agreement ("EULA") is a legal agreement between you (either an individual or a single entity) and Your Company Name for the software product identified above, which includes computer software and may include associated media, printed materials, and "online" or electronic documentation ("SOFTWARE PRODUCT").
+
+By installing, copying, or otherwise using the SOFTWARE PRODUCT, you agree to be bound by the terms of this EULA. If you do not agree to the terms of this EULA, do not install or use the SOFTWARE PRODUCT.
+
+SOFTWARE PRODUCT LICENSE
+
+The SOFTWARE PRODUCT is protected by copyright laws and international copyright treaties, as well as other intellectual property laws and treaties. The SOFTWARE PRODUCT is licensed, not sold.
+
+1. GRANT OF LICENSE
+This EULA grants you the following rights:
+- Installation and Use: You may install and use one copy of the SOFTWARE PRODUCT on a single computer.
+- Backup Copies: You may also make copies of the SOFTWARE PRODUCT as may be necessary for backup and archival purposes.
+
+2. DESCRIPTION OF OTHER RIGHTS AND LIMITATIONS
+- Limitations on Reverse Engineering, Decompilation, and Disassembly: You may not reverse engineer, decompile, or disassemble the SOFTWARE PRODUCT.
+- Separation of Components: The SOFTWARE PRODUCT is licensed as a single product.
+- Rental: You may not rent, lease, or lend the SOFTWARE PRODUCT.
+- Support Services: Your Company Name may provide you with support services related to the SOFTWARE PRODUCT ("Support Services").
+
+3. TERMINATION
+Without prejudice to any other rights, Your Company Name may terminate this EULA if you fail to comply with the terms and conditions of this EULA.
+
+4. COPYRIGHT
+All title and copyrights in and to the SOFTWARE PRODUCT are owned by Your Company Name.
+
+5. NO WARRANTIES
+The SOFTWARE PRODUCT is provided "AS IS" without warranty of any kind.
+
+6. LIMITATION OF LIABILITY
+In no event shall Your Company Name be liable for any damages whatsoever arising out of the use of or inability to use the SOFTWARE PRODUCT.
+
+If you have any questions about this EULA, or if you want to contact Your Company Name for any reason, please visit our website at https://www.yourcompany.com/
+
+Your Company Name
+Email: support@yourcompany.com
+Phone: +1-555-0123-4567

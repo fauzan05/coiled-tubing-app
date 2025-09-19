@@ -11,7 +11,9 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
+    <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
+  
   <ItemGroup>
     <Page Remove="ChartSelectionDialog.xaml" />
   </ItemGroup>
@@ -38,6 +40,7 @@
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
   </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="LiveChartsCore.SkiaSharpView.WinUI" Version="2.0.0-rc5.3" />
@@ -47,26 +50,31 @@
     <PackageReference Include="SkiaSharp" Version="3.119.0" />
     <PackageReference Include="SkiaSharp.Views.WinUI" Version="3.119.0" />
   </ItemGroup>
+  
   <ItemGroup>
     <Reference Include="OptoMMP_Standard_2_0">
       <HintPath>..\..\..\..\Downloads\PAC-DEV-OPTOMMP-DOTNET R6.0b-001\Developer\OptoMMP_Standard_2_0.dll</HintPath>
     </Reference>
   </ItemGroup>
+  
   <ItemGroup>
     <None Update="ChartSelectionDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>
   </ItemGroup>
+  
   <ItemGroup>
     <Page Update="SensorPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
+  
   <ItemGroup>
     <Page Update="DashboardPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
+  
   <ItemGroup>
     <Page Update="LoginWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -82,11 +90,9 @@
     <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
   </PropertyGroup>
 
-  <!-- Publish Properties -->
+  <!-- Publish Properties - Disabled trimming and ReadyToRun to avoid package resolution issues -->
   <PropertyGroup>
-    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <PublishReadyToRun>False</PublishReadyToRun>
+    <PublishTrimmed>False</PublishTrimmed>
   </PropertyGroup>
 </Project>

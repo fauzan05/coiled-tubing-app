@@ -4,34 +4,61 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.Painting.Effects;
 using LiveChartsCore.SkiaSharpView.VisualElements;
 using SkiaSharp;
+using System;
+using System.Diagnostics;
 
 namespace coiled_tubing_app
 {
     public class DashboardViewModel
     {
         // Chart 1: Temperature Line Chart
-        public ISeries[] TemperatureLineSeries { get; set; }
+        public ISeries[] TemperatureLineSeries { get; set; } = Array.Empty<ISeries>();
 
         // Chart 2: Pressure Column Chart  
-        public ISeries[] PressureColumnSeries { get; set; }
+        public ISeries[] PressureColumnSeries { get; set; } = Array.Empty<ISeries>();
 
         // Chart 3: Well Status Pie Chart
-        public ISeries[] WellStatusPieSeries { get; set; }
+        public ISeries[] WellStatusPieSeries { get; set; } = Array.Empty<ISeries>();
 
         // Chart 4: Flow Rate Area Chart
-        public ISeries[] FlowRateAreaSeries { get; set; }
+        public ISeries[] FlowRateAreaSeries { get; set; } = Array.Empty<ISeries>();
 
         // Chart 5: Equipment Status Scatter Chart
-        public ISeries[] EquipmentScatterSeries { get; set; }
+        public ISeries[] EquipmentScatterSeries { get; set; } = Array.Empty<ISeries>();
 
         // Chart 6: Depth vs Time Line Chart
-        public ISeries[] DepthTimeSeries { get; set; }
+        public ISeries[] DepthTimeSeries { get; set; } = Array.Empty<ISeries>();
 
-        public LabelVisual Title { get; set; }
+        public LabelVisual? Title { get; set; }
 
         public DashboardViewModel()
         {
-            InitializeCharts();
+            try
+            {
+                InitializeCharts();
+            }
+            catch (System.Runtime.InteropServices.COMException ex)
+            {
+                Debug.WriteLine($"COM Exception in DashboardViewModel: {ex}");
+                InitializeFallbackCharts();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"General Exception in DashboardViewModel: {ex}");
+                InitializeFallbackCharts();
+            }
+        }
+
+        private void InitializeFallbackCharts()
+        {
+            // Initialize with empty arrays to prevent null reference exceptions
+            TemperatureLineSeries = Array.Empty<ISeries>();
+            PressureColumnSeries = Array.Empty<ISeries>();
+            WellStatusPieSeries = Array.Empty<ISeries>();
+            FlowRateAreaSeries = Array.Empty<ISeries>();
+            EquipmentScatterSeries = Array.Empty<ISeries>();
+            DepthTimeSeries = Array.Empty<ISeries>();
+            Title = null;
         }
 
         private void InitializeCharts()
