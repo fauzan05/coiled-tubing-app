@@ -42,8 +42,7 @@
                        CornerRadius="12" 
                        Margin="5"
                        BorderBrush="#404040"
-                       BorderThickness="1"
-                       Background="#1E1E1E">
+                       BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -51,7 +50,7 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="15,15,15,5">
-                            <TextBlock Text="" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE7A3;" FontSize="20" Foreground="#FF6B47" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="Temperature Monitoring" 
                                       FontSize="16" 
                                       FontWeight="SemiBold"
@@ -70,8 +69,7 @@
                        CornerRadius="12" 
                        Margin="5"
                        BorderBrush="#404040"
-                       BorderThickness="1"
-                       Background="#1E1E1E">
+                       BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -79,7 +77,7 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="15,15,15,5">
-                            <TextBlock Text="" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D9;" FontSize="20" Foreground="#4FC3F7" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="Pressure Analysis" 
                                       FontSize="16" 
                                       FontWeight="SemiBold"
@@ -98,8 +96,7 @@
                        CornerRadius="12" 
                        Margin="5"
                        BorderBrush="#404040"
-                       BorderThickness="1"
-                       Background="#1E1E1E">
+                       BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -107,7 +104,7 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="15,15,15,5">
-                            <TextBlock Text="" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9E2;" FontSize="20" Foreground="#81C784" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="Well Status Overview" 
                                       FontSize="16" 
                                       FontWeight="SemiBold"
@@ -135,8 +132,7 @@
                        CornerRadius="12" 
                        Margin="5"
                        BorderBrush="#404040"
-                       BorderThickness="1"
-                       Background="#1E1E1E">
+                       BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -144,7 +140,7 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="15,15,15,5">
-                            <TextBlock Text="" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE81C;" FontSize="20" Foreground="#BA68C8" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="Flow Rate Trends" 
                                       FontSize="16" 
                                       FontWeight="SemiBold"
@@ -163,8 +159,7 @@
                        CornerRadius="12" 
                        Margin="5"
                        BorderBrush="#404040"
-                       BorderThickness="1"
-                       Background="#1E1E1E">
+                       BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -172,7 +167,7 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="15,15,15,5">
-                            <SymbolIcon Symbol="Caption" Foreground="OrangeRed" Margin="0,0,8,0"/>
+                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE90F;" FontSize="20" Foreground="OrangeRed" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="Equipment Efficiency" 
                                       FontSize="16" 
                                       FontWeight="SemiBold"
@@ -191,8 +186,7 @@
                        CornerRadius="12" 
                        Margin="5"
                        BorderBrush="#404040"
-                       BorderThickness="1"
-                       Background="#1E1E1E">
+                       BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -200,7 +194,7 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="15,15,15,5">
-                            <SymbolIcon Symbol="Download" Foreground="OrangeRed" Margin="0,0,8,0"/>
+                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE96E;" FontSize="20" Foreground="#FFB74D" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="Drilling Progress" 
                                       FontSize="16" 
                                       FontWeight="SemiBold"

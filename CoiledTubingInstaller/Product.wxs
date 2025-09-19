@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="Coiled Tubing Operations App" 
+           Language="1033" 
+           Version="1.0.0.0" 
+           Manufacturer="Your Company Name" 
+           UpgradeCode="12345678-1234-1234-1234-123456789012">
+    
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Description="Professional Coiled Tubing Operations Management Software"
+             Comments="Installer for Coiled Tubing App"
+             Manufacturer="Your Company Name" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Custom UI dengan progress bar dan dialog profesional -->
+    <UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    
+    <!-- Custom license agreement -->
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    
+    <!-- Custom banner dan dialog -->
+    <WixVariable Id="WixUIBannerBmp" Value="Banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="Dialog.bmp" />
+
+    <!-- Feature definition -->
+    <Feature Id="ProductFeature" Title="Coiled Tubing App" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+
+    <!-- Directory structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="Coiled Tubing App" />
+      </Directory>
+      
+      <!-- Start Menu -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Coiled Tubing App"/>
+      </Directory>
+      
+      <!-- Desktop -->
+      <Directory Id="DesktopFolder" Name="Desktop" />
+    </Directory>
+
+    <!-- Application Shortcut in Start Menu -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="12345678-1234-1234-1234-123456789013">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="Coiled Tubing App"
+                  Description="Professional Coiled Tubing Operations Management"
+                  Target="[#coiled_tubing_app.exe]"
+                  WorkingDirectory="INSTALLFOLDER"/>
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU" 
+                       Key="Software\Microsoft\CoiledTubingApp" 
+                       Name="installed" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <!-- Desktop Shortcut -->
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Guid="12345678-1234-1234-1234-123456789014">
+        <Shortcut Id="ApplicationDesktopShortcut"
+                  Name="Coiled Tubing App"
+                  Description="Professional Coiled Tubing Operations Management"
+                  Target="[#coiled_tubing_app.exe]"
+                  WorkingDirectory="INSTALLFOLDER"/>
+        <RegistryValue Root="HKCU" 
+                       Key="Software\Microsoft\CoiledTubingApp" 
+                       Name="desktop" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+  </Product>
+
+  <!-- Component Group - Files to install -->
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <!-- Main executable -->
+      <Component Id="MainExecutable" Guid="12345678-1234-1234-1234-123456789015">
+        <File Id="coiled_tubing_app.exe" 
+              Source="$(var.SolutionDir)coiled-tubing-app\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\coiled-tubing-app.exe" 
+              KeyPath="yes" />
+      </Component>
+      
+      <!-- All DLL dependencies -->
+      <Component Id="RuntimeDependencies" Guid="12345678-1234-1234-1234-123456789016">
+        <File Source="$(var.SolutionDir)coiled-tubing-app\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\*.dll" />
+        <File Source="$(var.SolutionDir)coiled-tubing-app\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\*.json" />
+      </Component>
+      
+      <!-- OptoMMP Library -->
+      <Component Id="OptoMMP" Guid="12345678-1234-1234-1234-123456789017">
+        <File Source="$(var.SolutionDir)coiled-tubing-app\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\OptoMMP_Standard_2_0.dll" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <!-- Custom UI Dialog Flow -->
+  <Fragment>
+    <UI Id="CustomWixUI_InstallDir">
+      <UIRef Id="WixUI_Common" />
+      
+      <!-- Welcome Dialog -->
+      <DialogRef Id="WelcomeDlg" />
+      <DialogRef Id="LicenseAgreementDlg" />
+      <DialogRef Id="InstallDirDlg" />
+      <DialogRef Id="VerifyReadyDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ExitDialog" />
+      
+      <!-- Dialog sequence -->
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg">1</Publish>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+    </UI>
+  </Fragment>
+</Wix>

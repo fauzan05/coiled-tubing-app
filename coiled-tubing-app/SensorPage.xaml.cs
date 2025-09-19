@@ -286,6 +286,104 @@ namespace coiled_tubing_app
             }
         }
 
+        private async void GeneralDataButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_currentDetailItem == null)
+                {
+                    UpdateStatusText("No record selected.", Microsoft.UI.Colors.Orange);
+                    return;
+                }
+
+                // Load current record to get existing general data
+                GeneralData existingData = null;
+                if (_chartService != null)
+                {
+                    var result = await _chartService.LoadRecordFromPathAsync(_currentDetailItem.FilePath);
+                    if (result.Record != null)
+                    {
+                        existingData = result.Record.GeneralData;
+                    }
+                }
+
+                // Show general data dialog
+                var dialog = existingData != null
+                    ? new GeneralDataDialog(existingData)
+                    : new GeneralDataDialog();
+
+                dialog.XamlRoot = this.XamlRoot;
+
+                var dialogResult = await dialog.ShowAsync();
+
+                if (dialogResult == ContentDialogResult.Primary)
+                {
+                    // Save the general data back to the record file
+                    await SaveGeneralDataToRecord(dialog.GeneralData);
+                    UpdateStatusText("General data saved successfully!", Microsoft.UI.Colors.Green);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GeneralDataButton_Click error: {ex.Message}");
+                UpdateStatusText($"Error opening general data form: {ex.Message}", Microsoft.UI.Colors.Red);
+            }
+        }
+
+        private async void ConnectionButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                UpdateStatusText("Opening connection settings...", Microsoft.UI.Colors.Blue);
+
+                var dialog = new ConnectionDialog();
+                dialog.XamlRoot = this.XamlRoot;
+
+                var result = await dialog.ShowAsync();
+
+                if (result == ContentDialogResult.Primary)
+                {
+                    UpdateStatusText("Connection established successfully!", Microsoft.UI.Colors.Green);
+                }
+                else
+                {
+                    UpdateStatusText("Connection cancelled.", Microsoft.UI.Colors.Orange);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ConnectionButton_Click error: {ex.Message}");
+                UpdateStatusText($"Error opening connection dialog: {ex.Message}", Microsoft.UI.Colors.Red);
+            }
+        }
+
+        private async Task SaveGeneralDataToRecord(GeneralData generalData)
+        {
+            try
+            {
+                if (_currentDetailItem == null || _chartService == null)
+                    return;
+
+                // Load current record
+                var result = await _chartService.LoadRecordFromPathAsync(_currentDetailItem.FilePath);
+                if (result.Record != null)
+                {
+                    // Update general data
+                    result.Record.GeneralData = generalData;
+
+                    // Save back to file using the existing path
+                    await _chartService.SaveRecordToPathAsync(result.Record, _currentDetailItem.FilePath);
+
+                    System.Diagnostics.Debug.WriteLine("General data saved successfully to record file");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SaveGeneralDataToRecord error: {ex.Message}");
+                throw;
+            }
+        }
+
         // Helper method yang lebih robust untuk update status
         private void UpdateStatusText(string message, Windows.UI.Color color)
         {
@@ -471,7 +569,11 @@ namespace coiled_tubing_app
                 HistoryTableView.Visibility = Visibility.Collapsed;
                 ActionButtonsPanel.Visibility = Visibility.Collapsed;
                 ChartTabView.Visibility = Visibility.Visible;
-                BackButton.Visibility = Visibility.Visible;
+                ActionButton_ChartTabView.Visibility = Visibility.Visible;
+                SensorPage_TitleView.Visibility = Visibility.Collapsed;
+                ColumnSensorPage_TitleView.Width = GridLength.Auto;
+                ColumnSensorPage_ActionButtonView.Width = new GridLength(1, GridUnitType.Star);
+                HistoryStatusTextBlockContainer.Visibility = Visibility.Collapsed;
             }
             catch (Exception ex)
             {
@@ -487,9 +589,13 @@ namespace coiled_tubing_app
 
             // Switch back to table view
             ChartTabView.Visibility = Visibility.Collapsed;
-            BackButton.Visibility = Visibility.Collapsed;
+            ActionButton_ChartTabView.Visibility = Visibility.Collapsed;
             HistoryTableView.Visibility = Visibility.Visible;
             ActionButtonsPanel.Visibility = Visibility.Visible;
+            SensorPage_TitleView.Visibility = Visibility.Visible;
+            ColumnSensorPage_TitleView.Width = GridLength.Auto;
+            ColumnSensorPage_ActionButtonView.Width = new GridLength(1, GridUnitType.Star);
+            HistoryStatusTextBlockContainer.Visibility = Visibility.Visible;
 
             // Clear tabs
             ChartsTabView.TabItems.Clear();
@@ -523,7 +629,6 @@ namespace coiled_tubing_app
                             FontSize = 16,
                             HorizontalAlignment = HorizontalAlignment.Center,
                             VerticalAlignment = VerticalAlignment.Center,
-                            Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray)
                         }
                     };
                     ChartsTabView.TabItems.Add(noChartsTab);
@@ -569,7 +674,6 @@ namespace coiled_tubing_app
                 CornerRadius = new CornerRadius(8),
                 BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.LightGray),
                 BorderThickness = new Thickness(1),
-                Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White),
                 Padding = new Thickness(15),
                 Margin = new Thickness(10)
             };

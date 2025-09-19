@@ -20,11 +20,11 @@
         <!-- Header -->
         <Grid Grid.Row="0" Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition x:Name="ColumnSensorPage_TitleView"/>
+                <ColumnDefinition x:Name="ColumnSensorPage_ActionButtonView"/>
             </Grid.ColumnDefinitions>
             
-            <StackPanel Grid.Column="0">
+            <StackPanel Grid.Column="0" x:Name="SensorPage_TitleView">
                 <TextBlock Text="Chart Record Management" 
                            FontSize="28" 
                            FontWeight="Bold" 
@@ -35,14 +35,22 @@
                            Foreground="Green"/>
             </StackPanel>
             
-            <!-- Back Button (Hidden by default) -->
-            <Button x:Name="BackButton"
-                    Grid.Column="1"
-                    Content="← Back"
-                    Click="BackButton_Click"
-                    Padding="15,8"
-                    Style="{StaticResource AccentButtonStyle}"
-                    Visibility="Collapsed"/>
+            <!-- Action Button (Hidden by default) -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" x:Name="ActionButton_ChartTabView" Visibility="Collapsed">
+                <Button HorizontalAlignment="Left" Margin="0, 0, 10, 0" Content="Connection" 
+                        Style="{StaticResource AccentButtonStyle}"
+                        Click="ConnectionButton_Click"
+                        />
+                <Button HorizontalAlignment="Left" Margin="0, 0, 10, 0" Content="General Data" 
+                        Style="{StaticResource AccentButtonStyle}"
+                        Click="GeneralDataButton_Click"
+                        />
+                <Button HorizontalAlignment="Right" x:Name="BackButton"
+                        Content="← Back"
+                        Click="BackButton_Click"
+                        />
+            </StackPanel>
+
         </Grid>
 
         <!-- Action Buttons -->
@@ -53,27 +61,43 @@
                     Margin="0,0,0,20">
             
             <Button x:Name="AddRecordButton"
-                    Content="+ Add Record"
                     Style="{StaticResource AccentButtonStyle}"
                     Padding="20,10"
-                    Click="AddRecordButton_Click"/>
+                    Click="AddRecordButton_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE710;" FontSize="14"/>
+                    <TextBlock Text="Add Record"/>
+                </StackPanel>
+            </Button>
 
             <Button x:Name="LoadRecordButton"
-                    Content="📁 Load Record"
                     Padding="20,10"
-                    Click="LoadRecordButton_Click"/>
+                    Click="LoadRecordButton_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8E5;" FontSize="14"/>
+                    <TextBlock Text="Load Record"/>
+                </StackPanel>
+            </Button>
             
             <Button x:Name="RefreshHistoryButton"
-                    Content="🔄 Refresh"
                     Padding="20,10"
-                    Click="RefreshHistoryButton_Click"/>
+                    Click="RefreshHistoryButton_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72C;" FontSize="14"/>
+                    <TextBlock Text="Refresh"/>
+                </StackPanel>
+            </Button>
                     
             <Button x:Name="ClearHistoryButton"
-                    Content="🗑️ Clear All"
                     Padding="20,10"
                     Background="OrangeRed"
                     Foreground="White"
-                    Click="ClearHistoryButton_Click"/>
+                    Click="ClearHistoryButton_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74D;" FontSize="14"/>
+                    <TextBlock Text="Clear All"/>
+                </StackPanel>
+            </Button>
         </StackPanel>
 
         <!-- Main Content Area -->
@@ -168,7 +192,6 @@
                                                        Foreground="Gray"/>
                                             
                                             <Button Grid.Column="4"
-                                                    Content="❌"
                                                     Background="Transparent"
                                                     BorderBrush="Red"
                                                     Foreground="Red"
@@ -176,7 +199,9 @@
                                                     Padding="8,4"
                                                     Tag="{Binding}"
                                                     Click="DeleteHistoryItem_Click"
-                                                    ToolTipService.ToolTip="Delete this record"/>
+                                                    ToolTipService.ToolTip="Delete this record">
+                                                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74D;" FontSize="14"/>
+                                            </Button>
                                         </Grid>
                                     </Grid>
                                 </Border>
@@ -193,7 +218,7 @@
                     BorderThickness="1" 
                     Padding="10"
                     Visibility="Collapsed">
-                
+
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -228,7 +253,8 @@
                 Padding="15,8" 
                 Margin="0,20,0,0"
                 BorderBrush="LightGray"
-                BorderThickness="1">
+                BorderThickness="1"
+                x:Name="HistoryStatusTextBlockContainer">
             <TextBlock x:Name="HistoryStatusTextBlock"
                        Text="No files in history"
                        FontSize="12"

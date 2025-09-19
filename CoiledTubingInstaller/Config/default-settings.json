@@ -1,0 +1,38 @@
+{
+  "ApplicationSettings": {
+    "StartupMode": "Dashboard",
+    "AutoConnect": false,
+    "EnableLogging": true,
+    "LogLevel": "Information",
+    "DataRetentionDays": 30,
+    "BackupInterval": 24,
+    "Language": "en-US",
+    "Theme": "Light"
+  },
+  "ConnectionSettings": {
+    "DefaultTimeout": 5000,
+    "RetryAttempts": 3,
+    "KeepAlive": true,
+    "DefaultPort": 502
+  },
+  "ChartSettings": {
+    "DefaultRefreshRate": 1000,
+    "MaxDataPoints": 1000,
+    "EnableAnimation": true,
+    "ShowGrid": true,
+    "ShowLegend": true
+  },
+  "SecuritySettings": {
+    "RequireLogin": true,
+    "SessionTimeout": 60,
+    "PasswordComplexity": "Medium",
+    "AuditTrail": true
+  },
+  "DataSettings": {
+    "DefaultDataPath": "%USERPROFILE%\\Documents\\Coiled Tubing Projects",
+    "AutoSave": true,
+    "AutoSaveInterval": 300,
+    "ExportFormat": "CSV",
+    "DateTimeFormat": "yyyy-MM-dd HH:mm:ss"
+  }
+}

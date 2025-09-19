@@ -16,13 +16,15 @@ namespace coiled_tubing_app
         public MainWindow()
         {
             InitializeComponent();
-            
+
             // Navigate to default page
-            Page page = new DashboardPage();
+            // Page page = new DashboardPage();
+            Page page = new SensorPage();
             contentFrame9.Navigate(page.GetType(), null, new EntranceNavigationTransitionInfo());
-            
+
             // Set default selected item di NavigationView
-            SetSelectedNavigationItem("DashboardPage");
+            //SetSelectedNavigationItem("DashboardPage");
+            SetSelectedNavigationItem("SensorPage");
         }
 
         private void SetSelectedNavigationItem(string tag)
