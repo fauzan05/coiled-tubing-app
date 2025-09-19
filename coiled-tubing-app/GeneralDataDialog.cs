@@ -31,24 +31,20 @@ namespace coiled_tubing_app
             this.PrimaryButtonText = "Save";
             this.SecondaryButtonText = "Cancel";
 
-            // ScrollViewer tidak perlu width karena akan mengikuti ContentDialog
+            // ScrollViewer for the dialog content
             var scrollViewer = new ScrollViewer
             {
-                Height = double.NaN, // Auto height
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                Margin = new Thickness(5),
-                Padding = new Thickness(5),
-                HorizontalAlignment = HorizontalAlignment.Stretch, // Agar mengisi seluruh width ContentDialog
+                Margin = new Thickness(10),
+                Padding = new Thickness(10),
                 Width = 450,
+                MaxHeight = 400
             };
 
             var mainPanel = new StackPanel
             {
-                //Spacing = 5,
-                HorizontalAlignment = HorizontalAlignment.Stretch, // Agar mengisi seluruh width
-                Width = 1500,
-                Height = double.NaN // Auto height
+                Spacing = 5
             };
 
             // Initialize all text boxes
@@ -67,7 +63,7 @@ namespace coiled_tubing_app
             _serviceDistrictBoatTextBox = CreateTextBox("");
             _bjRepresentativeTextBox = CreateTextBox("Ade Suleman");
             _jobNumberTextBox = CreateTextBox("");
-
+            
             // Add form fields
             mainPanel.Children.Add(CreateFormFieldGrid("Customer:", _customerTextBox));
             mainPanel.Children.Add(CreateFormFieldGrid("Lease:", _leaseTextBox));
@@ -86,12 +82,14 @@ namespace coiled_tubing_app
             mainPanel.Children.Add(CreateFormFieldGrid("Job Number:", _jobNumberTextBox));
 
             scrollViewer.Content = mainPanel;
-            this.Height = 500;
-            this.MaxHeight = 600;
+            
+            // Set dialog content and size
             this.Content = scrollViewer;
-            // Set to center
-            this.HorizontalAlignment = HorizontalAlignment.Center;
-            this.VerticalAlignment = VerticalAlignment.Center;
+            this.Width = 500;
+            this.Height = 500;
+            this.MaxWidth = 600;
+            this.MaxHeight = 600;
+            
             // Event handler for save button
             this.PrimaryButtonClick += OnSaveButtonClick;
         }

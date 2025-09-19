@@ -1,0 +1,450 @@
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using System;
+using System.Threading.Tasks;
+using OptoMMP6;
+
+namespace coiled_tubing_app
+{
+    public sealed class ConnectionDialog : ContentDialog
+    {
+        internal static OptoMMP OptoMMP = new OptoMMP();
+        
+        // Input fields
+        private readonly TextBox _hostTextBox;
+        private readonly TextBox _portTextBox;
+        private readonly TextBox _timeoutTextBox;
+        
+        // UI elements for loading and results
+        private readonly Button _buttonFindDevice;
+        private readonly ProgressRing _loadingProgressRing;
+        private readonly TextBlock _resultTextBlock;
+        private readonly StackPanel _resultPanel;
+        private readonly FontIcon _resultIcon;
+        
+        private int i32Result;
+
+        public ConnectionDialog()
+        {
+            this.Title = "Connection Settings";
+            this.PrimaryButtonText = "Save";
+            this.SecondaryButtonText = "Cancel";
+
+            // ScrollViewer for the dialog content
+            var scrollViewer = new ScrollViewer
+            {
+                Height = double.NaN, // Auto height
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Margin = new Thickness(5),
+                Padding = new Thickness(5),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Width = 400,
+            };
+
+            var mainPanel = new StackPanel
+            {
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Width = 350,
+                Height = double.NaN, // Auto height
+                Spacing = 10
+            };
+
+            // Add placeholder content with icon
+            var headerPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(20, 10, 20, 20),
+                Spacing = 10
+            };
+
+            var headerIcon = new FontIcon
+            {
+                FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"),
+                Glyph = "\uE968", // Connection/Network icon
+                FontSize = 20,
+                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DodgerBlue),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            var placeholderText = new TextBlock
+            {
+                Text = "Please enter connection settings and click find device button to show all device available.",
+                FontSize = 14,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextWrapping = TextWrapping.Wrap
+            };
+
+            headerPanel.Children.Add(headerIcon);
+            headerPanel.Children.Add(placeholderText);
+            mainPanel.Children.Add(headerPanel);
+
+            // Initialize input fields with default values
+            _hostTextBox = CreateTextBox("192.168.1.100");
+            _portTextBox = CreateTextBox("502");
+            _timeoutTextBox = CreateTextBox("5000");
+
+            // Add input fields
+            mainPanel.Children.Add(CreateFormFieldGrid("Host:", _hostTextBox));
+            mainPanel.Children.Add(CreateFormFieldGrid("Port:", _portTextBox));
+            mainPanel.Children.Add(CreateFormFieldGrid("Timeout:", _timeoutTextBox));
+
+            // Create and add the Find Device button with icon
+            var findButtonContent = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 8
+            };
+
+            var findButtonIcon = new FontIcon
+            {
+                FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"),
+                Glyph = "\uE721", // Search icon
+                FontSize = 14
+            };
+
+            var findButtonText = new TextBlock
+            {
+                Text = "Find Device"
+            };
+
+            findButtonContent.Children.Add(findButtonIcon);
+            findButtonContent.Children.Add(findButtonText);
+
+            _buttonFindDevice = new Button
+            {
+                Content = findButtonContent,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 20, 0, 0),
+                Padding = new Thickness(15, 8, 15, 8),
+                MinWidth = 120
+            };
+
+            // Wire up the event handler for Find Device button
+            _buttonFindDevice.Click += OnButtonFindDeviceClick;
+
+            // Add the button to the main panel
+            mainPanel.Children.Add(_buttonFindDevice);
+
+            // Create loading progress ring (initially hidden)
+            _loadingProgressRing = new ProgressRing
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 10, 0, 0),
+                Width = 30,
+                Height = 30,
+                IsActive = false,
+                Visibility = Visibility.Collapsed
+            };
+
+            mainPanel.Children.Add(_loadingProgressRing);
+
+            // Create result panel (initially hidden)
+            _resultPanel = new StackPanel
+            {
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Margin = new Thickness(10, 15, 10, 0),
+                Visibility = Visibility.Collapsed,
+                Spacing = 8
+            };
+
+            // Result icon and text
+            var resultHeaderPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Spacing = 10
+            };
+
+            _resultIcon = new FontIcon
+            {
+                FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"),
+                FontSize = 16
+            };
+
+            _resultTextBlock = new TextBlock
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                FontSize = 14,
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                TextWrapping = TextWrapping.Wrap
+            };
+
+            resultHeaderPanel.Children.Add(_resultIcon);
+            resultHeaderPanel.Children.Add(_resultTextBlock);
+            _resultPanel.Children.Add(resultHeaderPanel);
+            mainPanel.Children.Add(_resultPanel);
+
+            scrollViewer.Content = mainPanel;
+            this.Height = 450;
+            this.MaxHeight = 550;
+            this.Content = scrollViewer;
+            
+            // Set to center
+            this.HorizontalAlignment = HorizontalAlignment.Center;
+            this.VerticalAlignment = VerticalAlignment.Center;
+            
+            // Event handler for connect button
+            this.PrimaryButtonClick += OnConnectButtonClick;
+        }
+
+        private TextBox CreateTextBox(string defaultText = "")
+        {
+            return new TextBox
+            {
+                Text = defaultText,
+                Height = 32,
+                MinWidth = 200,
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 4, 8, 4),
+                FontSize = 13,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Stretch
+            };
+        }
+
+        private Grid CreateFormFieldGrid(string label, TextBox textBox)
+        {
+            var grid = new Grid
+            {
+                Height = 40,
+                Margin = new Thickness(10, 5, 10, 5)
+            };
+
+            // Set column definitions
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) }); // Label width
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // TextBox width
+
+            var labelBlock = new TextBlock
+            {
+                Text = label,
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                FontSize = 13,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 10, 0)
+            };
+
+            Grid.SetColumn(labelBlock, 0);
+            Grid.SetColumn(textBox, 1);
+
+            grid.Children.Add(labelBlock);
+            grid.Children.Add(textBox);
+
+            return grid;
+        }
+
+        private async void OnButtonFindDeviceClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Show loading animation and disable button
+                ShowLoadingState(true);
+
+                // Get values from input fields and convert to appropriate types
+                string host = _hostTextBox.Text?.Trim() ?? "";
+                
+                // Convert port and timeout to int with validation
+                if (!int.TryParse(_portTextBox.Text?.Trim(), out int port))
+                {
+                    port = 502; // Default port if parsing fails
+                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Invalid port, using default 502");
+                }
+
+                if (!int.TryParse(_timeoutTextBox.Text?.Trim(), out int timeout))
+                {
+                    timeout = 5000; // Default timeout if parsing fails
+                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Invalid timeout, using default 5000");
+                }
+
+                System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Find Device clicked with Host={host}, Port={port}, Timeout={timeout}");
+
+                // Simulate some delay for better UX (you can remove this if not needed)
+                await Task.Delay(1000);
+
+                // Implement find device logic using OptoMMP with correct parameters
+                await Task.Run(() =>
+                {
+                    i32Result = OptoMMP.Open(host, port, OptoMMP.Connection.Tcp, timeout, true);
+                });
+
+                // Hide loading and show results
+                ShowLoadingState(false);
+                ShowConnectionResult(i32Result, host, port);
+                
+                if (i32Result == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Device connection successful");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Device connection failed with error code: {i32Result}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Hide loading on error
+                ShowLoadingState(false);
+                ShowErrorResult(ex.Message);
+                System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Error in find device action: {ex.Message}");
+            }
+        }
+
+        private void ShowLoadingState(bool isLoading)
+        {
+            _buttonFindDevice.IsEnabled = !isLoading;
+            _loadingProgressRing.IsActive = isLoading;
+            _loadingProgressRing.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
+            
+            if (isLoading)
+            {
+                var loadingContent = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 8
+                };
+
+                var loadingIcon = new FontIcon
+                {
+                    FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"),
+                    Glyph = "\uE777", // Sync icon
+                    FontSize = 14
+                };
+
+                var loadingText = new TextBlock
+                {
+                    Text = "Searching..."
+                };
+
+                loadingContent.Children.Add(loadingIcon);
+                loadingContent.Children.Add(loadingText);
+                _buttonFindDevice.Content = loadingContent;
+                _resultPanel.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                var normalContent = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 8
+                };
+
+                var normalIcon = new FontIcon
+                {
+                    FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"),
+                    Glyph = "\uE721", // Search icon
+                    FontSize = 14
+                };
+
+                var normalText = new TextBlock
+                {
+                    Text = "Find Device"
+                };
+
+                normalContent.Children.Add(normalIcon);
+                normalContent.Children.Add(normalText);
+                _buttonFindDevice.Content = normalContent;
+            }
+        }
+
+        private void ShowConnectionResult(int resultCode, string host, int port)
+        {
+            _resultPanel.Visibility = Visibility.Visible;
+            
+            if (resultCode == 0)
+            {
+                // Success
+                _resultIcon.Glyph = "\uE73E"; // Checkmark icon
+                _resultIcon.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Green);
+                _resultTextBlock.Text = $"Connection Successful!\n\nDevice found at {host}:{port}\nResult Code: {resultCode}";
+                _resultTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Green);
+            }
+            else
+            {
+                // Failure
+                _resultIcon.Glyph = "\uE783"; // Error icon
+                _resultIcon.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
+                _resultTextBlock.Text = $"Connection Failed!\n\nCould not connect to {host}:{port}\nError Code: {resultCode}";
+                _resultTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
+            }
+        }
+
+        private void ShowErrorResult(string errorMessage)
+        {
+            _resultPanel.Visibility = Visibility.Visible;
+            _resultIcon.Glyph = "\uE7BA"; // Warning icon
+            _resultIcon.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Orange);
+            _resultTextBlock.Text = $"Error Occurred!\n\n{errorMessage}";
+            _resultTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Orange);
+        }
+
+        private async void OnConnectButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            try
+            {
+                // Get values from input fields and convert to appropriate types
+                string host = _hostTextBox.Text?.Trim() ?? "";
+                
+                // Convert port and timeout to int with validation
+                if (!int.TryParse(_portTextBox.Text?.Trim(), out int port))
+                {
+                    port = 502; // Default port if parsing fails
+                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Invalid port, using default 502");
+                }
+
+                if (!int.TryParse(_timeoutTextBox.Text?.Trim(), out int timeout))
+                {
+                    timeout = 5000; // Default timeout if parsing fails
+                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Invalid timeout, using default 5000");
+                }
+
+                System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Connect clicked with Host={host}, Port={port}, Timeout={timeout}");
+                
+                // If device hasn't been found yet, try to connect first
+                if (i32Result != 0)
+                {
+                    // Defer the dialog closing to perform connection
+                    args.Cancel = true;
+                    
+                    // Show loading
+                    ShowLoadingState(true);
+                    
+                    // Try to connect
+                    await Task.Run(() =>
+                    {
+                        i32Result = OptoMMP.Open(host, port, OptoMMP.Connection.Tcp, timeout, true);
+                    });
+                    
+                    // Hide loading and show result
+                    ShowLoadingState(false);
+                    ShowConnectionResult(i32Result, host, port);
+                    
+                    if (i32Result == 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine("ConnectionDialog: Connection successful, dialog will close");
+                        // Close dialog programmatically after successful connection
+                        await Task.Delay(1500); // Show success message briefly
+                        this.Hide();
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Connection failed with error code: {i32Result}");
+                    }
+                }
+                else
+                {
+                    // Device already connected successfully
+                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Using existing successful connection");
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowLoadingState(false);
+                ShowErrorResult(ex.Message);
+                System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Error in connect action: {ex.Message}");
+                args.Cancel = true;
+            }
+        }
+    }
+}

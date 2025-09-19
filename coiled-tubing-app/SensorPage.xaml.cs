@@ -308,10 +308,10 @@ namespace coiled_tubing_app
                 }
 
                 // Show general data dialog
-                var dialog = existingData != null 
-                    ? new GeneralDataDialog(existingData) 
+                var dialog = existingData != null
+                    ? new GeneralDataDialog(existingData)
                     : new GeneralDataDialog();
-                
+
                 dialog.XamlRoot = this.XamlRoot;
 
                 var dialogResult = await dialog.ShowAsync();
@@ -327,6 +327,33 @@ namespace coiled_tubing_app
             {
                 System.Diagnostics.Debug.WriteLine($"GeneralDataButton_Click error: {ex.Message}");
                 UpdateStatusText($"Error opening general data form: {ex.Message}", Microsoft.UI.Colors.Red);
+            }
+        }
+
+        private async void ConnectionButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                UpdateStatusText("Opening connection settings...", Microsoft.UI.Colors.Blue);
+
+                var dialog = new ConnectionDialog();
+                dialog.XamlRoot = this.XamlRoot;
+
+                var result = await dialog.ShowAsync();
+
+                if (result == ContentDialogResult.Primary)
+                {
+                    UpdateStatusText("Connection established successfully!", Microsoft.UI.Colors.Green);
+                }
+                else
+                {
+                    UpdateStatusText("Connection cancelled.", Microsoft.UI.Colors.Orange);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ConnectionButton_Click error: {ex.Message}");
+                UpdateStatusText($"Error opening connection dialog: {ex.Message}", Microsoft.UI.Colors.Red);
             }
         }
 
@@ -602,7 +629,6 @@ namespace coiled_tubing_app
                             FontSize = 16,
                             HorizontalAlignment = HorizontalAlignment.Center,
                             VerticalAlignment = VerticalAlignment.Center,
-                            Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray)
                         }
                     };
                     ChartsTabView.TabItems.Add(noChartsTab);
