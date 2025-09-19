@@ -117,36 +117,33 @@ dotnet run --project coiled-tubing-app
 
 ## 📁 Project Structure
 
-```
-coiled-tubing-app/
-??? coiled-tubing-app/
-?   ??? Models/                    # Data models
-?   ?   ??? ChartRecord.cs
-?   ?   ??? ChartItem.cs
-?   ?   ??? FileHistoryItem.cs
-?   ?   ??? GeneralData.cs
-?   ?   ??? HistoryTableItem.cs
-?   ??? Services/                  # Business logic services
-?   ?   ??? ChartService.cs
-?   ?   ??? FileHistoryService.cs
-?   ?   ??? SimpleFileHistoryService.cs
-?   ??? ViewModels/               # MVVM view models
-?   ?   ??? ChartViewModel.cs
-?   ?   ??? DashboardViewModel.cs
-?   ??? Assets/                   # Application assets
-?   ??? Pages & Views/           # UI components
-?   ?   ??? DashboardPage.xaml
-?   ?   ??? SensorPage.xaml
-?   ?   ??? LoginPage.xaml
-?   ?   ??? LoginWindow.xaml
-?   ?   ??? MainWindow.xaml
-?   ??? Dialogs/                 # Modal dialogs
-?   ?   ??? ChartSelectionDialog.xaml
-?   ?   ??? ConnectionDialog.cs
-?   ?   ??? GeneralDataDialog.cs
-?   ??? App.xaml.cs              # Application entry point
-??? README.md
-```
+📂 coiled-tubing-app  
+ ┣ 📂 Models  
+ ┃ ┣ 📄 ChartRecord.cs  
+ ┃ ┣ 📄 ChartItem.cs  
+ ┃ ┣ 📄 FileHistoryItem.cs  
+ ┃ ┣ 📄 GeneralData.cs  
+ ┃ ┗ 📄 HistoryTableItem.cs  
+ ┣ 📂 Services  
+ ┃ ┣ 📄 ChartService.cs  
+ ┃ ┣ 📄 FileHistoryService.cs  
+ ┃ ┗ 📄 SimpleFileHistoryService.cs  
+ ┣ 📂 ViewModels  
+ ┃ ┣ 📄 ChartViewModel.cs  
+ ┃ ┗ 📄 DashboardViewModel.cs  
+ ┣ 📂 Assets  
+ ┣ 📂 Pages & Views  
+ ┃ ┣ 📄 DashboardPage.xaml  
+ ┃ ┣ 📄 SensorPage.xaml  
+ ┃ ┣ 📄 LoginPage.xaml  
+ ┃ ┣ 📄 LoginWindow.xaml  
+ ┃ ┗ 📄 MainWindow.xaml  
+ ┣ 📂 Dialogs  
+ ┃ ┣ 📄 ChartSelectionDialog.xaml  
+ ┃ ┣ 📄 ConnectionDialog.cs  
+ ┃ ┗ 📄 GeneralDataDialog.cs  
+ ┣ 📄 App.xaml.cs  
+ ┗ 📄 README.md  
 
 ## 💡 Key Features Explained
 
