@@ -2,7 +2,7 @@
 
 A comprehensive Windows application for monitoring and managing coiled tubing operations in the oil and gas industry. Built with .NET 8 and WinUI 3, this application provides real-time data visualization, sensor monitoring, and operational management capabilities.
 
-## ?? Features
+## ⚙️ Features
 
 - **Real-time Dashboard**: Monitor temperature, pressure, flow rates, and drilling progress
 - **Advanced Data Visualization**: Interactive charts using LiveCharts with multiple chart types (line, column, pie, area, scatter)
@@ -14,7 +14,7 @@ A comprehensive Windows application for monitoring and managing coiled tubing op
 - **File History System**: Comprehensive tracking of all operational records
 - **User Authentication**: Secure login system for operational access
 
-## ??? Technology Stack
+## 💻 Technology Stack
 
 ### Core Technologies
 - **.NET 8.0** - Latest .NET framework for Windows applications
@@ -31,7 +31,7 @@ A comprehensive Windows application for monitoring and managing coiled tubing op
 - **Microsoft.WindowsAppSDK** (v1.7.250606001) - Windows App SDK
 - **OptoMMP_Standard_2_0** - Industrial hardware integration library
 
-## ?? System Requirements
+## ⚡ System Requirements
 
 ### Minimum Requirements
 - **Operating System**: Windows 10 version 1903 (build 18362) or later
@@ -46,7 +46,7 @@ A comprehensive Windows application for monitoring and managing coiled tubing op
 - Microsoft Visual C++ 2015-2022 Redistributable (x64)
 - Windows App SDK Runtime
 
-## ?? Installation & Setup
+## 📦 Installation & Setup
 
 ### 1. Clone the Repository
 ```bash
@@ -88,7 +88,7 @@ dotnet build --configuration Release
 dotnet run --project coiled-tubing-app
 ```
 
-## ?? Quick Start Guide
+## 🚀 Quick Start Guide
 
 ### First Launch
 1. Launch the application from Visual Studio or using `dotnet run`
@@ -115,7 +115,7 @@ dotnet run --project coiled-tubing-app
 2. Set up your OptoMMP device connections
 3. Configure communication parameters
 
-## ?? Project Structure
+## 📁 Project Structure
 
 ```
 coiled-tubing-app/
@@ -148,7 +148,7 @@ coiled-tubing-app/
 ??? README.md
 ```
 
-## ?? Key Features Explained
+## 💡 Key Features Explained
 
 ### Data Visualization
 The application uses LiveCharts for creating interactive, real-time charts:
@@ -168,7 +168,7 @@ The application uses LiveCharts for creating interactive, real-time charts:
 - **Real-time Data**: Live sensor data acquisition
 - **Connection Management**: Configure multiple device connections
 
-## ?? Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Issues
 
@@ -201,7 +201,7 @@ The application uses NLog for comprehensive logging. Check logs for detailed err
 - Debug output in Visual Studio Output window
 - Application logs (location configurable via NLog configuration)
 
-## ?? Contributing
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -215,22 +215,22 @@ The application uses NLog for comprehensive logging. Check logs for detailed err
 - Add unit tests for new features
 - Update documentation for API changes
 
-## ?? License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## ?? Support
+## 💬 Support
 
 - **Repository**: [GitHub Issues](https://github.com/fauzan05/coiled-tubing-app/issues)
 - **Documentation**: Check the `/docs` folder for detailed documentation
 - **Community**: Join our discussions in GitHub Discussions
 
-## ?? Version History
+## 📅 Version History
 
 - **v1.0.0** - Initial release with core dashboard and monitoring features
 - See [CHANGELOG.md](CHANGELOG.md) for detailed version history
 
-## ?? Acknowledgments
+## 🙏 Acknowledgments
 
 - LiveCharts team for excellent charting library
 - Microsoft for WinUI 3 and .NET 8
