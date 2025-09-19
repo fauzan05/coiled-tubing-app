@@ -42,7 +42,7 @@
                        CornerRadius="12" 
                        Margin="5"
                        BorderBrush="#404040"
-                       BorderThickness="1">
+                       BorderThickness="1" >
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
