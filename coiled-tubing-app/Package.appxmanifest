@@ -8,14 +8,14 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="0aa27683-8850-4645-bfb5-171b1e553ad3"
+    Name="CoiledTubingApp"
     Publisher="CN=User 1"
     Version="1.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="0aa27683-8850-4645-bfb5-171b1e553ad3" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>coiled-tubing-app</DisplayName>
+    <DisplayName>Coiled Tubing App</DisplayName>
     <PublisherDisplayName>User 1</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -34,8 +34,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="coiled-tubing-app"
-        Description="coiled-tubing-app"
+        DisplayName="Coiled Tubing App"
+        Description="Coiled Tubing Application for Sensor Management"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">

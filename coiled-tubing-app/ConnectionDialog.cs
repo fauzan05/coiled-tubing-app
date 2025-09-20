@@ -8,7 +8,7 @@ namespace coiled_tubing_app
 {
     public sealed class ConnectionDialog : ContentDialog
     {
-        internal static OptoMMP OptoMMP = new OptoMMP();
+        internal static OptoMMP mmp = new OptoMMP();
 
         // Input fields
         private readonly TextBox _hostTextBox;
@@ -18,9 +18,14 @@ namespace coiled_tubing_app
         // UI elements for loading and results
         private readonly Button _buttonFindDevice;
         private readonly ProgressRing _loadingProgressRing;
+        private readonly TextBlock _loadingTextBlock;
         private readonly TextBlock _resultTextBlock;
+        private readonly TextBlock _resultDataAnalog;
         private readonly StackPanel _resultPanel;
         private readonly FontIcon _resultIcon;
+
+        // Add debug info display
+        private readonly TextBlock _debugInfoTextBlock;
 
         private int i32Result;
 
@@ -141,6 +146,20 @@ namespace coiled_tubing_app
 
             mainPanel.Children.Add(_loadingProgressRing);
 
+            // Create loading text block (initially hidden)
+            _loadingTextBlock = new TextBlock
+            {
+                Text = "Please wait while searching for devices...",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 0),
+                FontSize = 12,
+                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray),
+                Visibility = Visibility.Collapsed,
+                TextWrapping = TextWrapping.Wrap
+            };
+
+            mainPanel.Children.Add(_loadingTextBlock);
+
             // Create result panel (initially hidden)
             _resultPanel = new StackPanel
             {
@@ -175,6 +194,33 @@ namespace coiled_tubing_app
             resultHeaderPanel.Children.Add(_resultIcon);
             resultHeaderPanel.Children.Add(_resultTextBlock);
             _resultPanel.Children.Add(resultHeaderPanel);
+
+            // Initialize analog data display TextBlock
+            _resultDataAnalog = new TextBlock
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                FontSize = 12,
+                Margin = new Thickness(0, 10, 0, 0),
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkBlue),
+                Visibility = Visibility.Collapsed
+            };
+
+            _resultPanel.Children.Add(_resultDataAnalog);
+
+            // Add debug info display
+            _debugInfoTextBlock = new TextBlock
+            {
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                FontSize = 10,
+                Margin = new Thickness(0, 10, 0, 0),
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray),
+                Visibility = Visibility.Collapsed,
+                FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas")
+            };
+
+            _resultPanel.Children.Add(_debugInfoTextBlock);
             mainPanel.Children.Add(_resultPanel);
 
             scrollViewer.Content = mainPanel;
@@ -188,6 +234,19 @@ namespace coiled_tubing_app
 
             // Event handler for connect button
             this.PrimaryButtonClick += OnConnectButtonClick;
+        }
+
+        private void LogDebugInfo(string message)
+        {
+            // Write to debug output
+            System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {message}");
+
+            // Also write to console if available
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {message}");
+
+            // Show in UI for better visibility
+            _debugInfoTextBlock.Visibility = Visibility.Visible;
+            _debugInfoTextBlock.Text += $"[{DateTime.Now:HH:mm:ss.fff}] {message}\n";
         }
 
         private TextBox CreateTextBox(string defaultText = "")
@@ -235,7 +294,7 @@ namespace coiled_tubing_app
             return grid;
         }
 
-        private void OnButtonFindDeviceClick(object sender, RoutedEventArgs e)
+        private async void OnButtonFindDeviceClick(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -249,42 +308,50 @@ namespace coiled_tubing_app
                 if (!int.TryParse(_portTextBox.Text?.Trim(), out int port))
                 {
                     port = 502; // Default port if parsing fails
-                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Invalid port, using default 502");
+                    LogDebugInfo("ConnectionDialog: Invalid port, using default 502");
                 }
 
                 if (!int.TryParse(_timeoutTextBox.Text?.Trim(), out int timeout))
                 {
                     timeout = 5000; // Default timeout if parsing fails
-                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Invalid timeout, using default 5000");
+                    LogDebugInfo("ConnectionDialog: Invalid timeout, using default 5000");
                 }
 
-                System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Find Device clicked with Host={host}, Port={port}, Timeout={timeout}");
+                LogDebugInfo($"ConnectionDialog: Find Device clicked with Host={host}, Port={port}, Timeout={timeout}");
 
-                int i32Result = OptoMMP.Open(host, port, OptoMMP.Connection.Tcp, timeout, true);
-
-                // Update UI on the UI thread
-                DispatcherQueue.TryEnqueue(() =>
+                // Run device discovery on background thread to avoid blocking UI
+                i32Result = await Task.Run(() =>
                 {
-                    // Hide loading and show results
-                    ShowLoadingState(false);
-                    ShowConnectionResult(i32Result, host, port);
-
-                    if (i32Result == 0)
-                    {
-                        System.Diagnostics.Debug.WriteLine("ConnectionDialog: Device connection successful");
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Device connection failed with error code: {i32Result}");
-                    }
+                    return mmp.Open(host, port, OptoMMP.Connection.Tcp, timeout, true);
                 });
+
+                // Hide loading and show results
+                ShowLoadingState(false);
+                ShowConnectionResult(i32Result, host, port);
+
+                if (i32Result == 0)
+                {
+                    LogDebugInfo("ConnectionDialog: Device connection successful");
+                    // Jika berhasil maka coba test dapatkan data analog
+                    float outputs = 0.0f;
+                    int analogReadResult = mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(6, 0), out outputs);
+                    // Tampilkan outputs di text block
+
+                    ShowAnalogData(outputs, analogReadResult);
+                    LogDebugInfo($"ConnectionDialog: Analog read result: {analogReadResult}, Value: {outputs}");
+
+                }
+                else
+                {
+                    LogDebugInfo($"ConnectionDialog: Device connection failed with error code: {i32Result}");
+                }
             }
             catch (Exception ex)
             {
                 // Hide loading on error
                 ShowLoadingState(false);
                 ShowErrorResult(ex.Message);
-                System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Error in find device action: {ex.Message}");
+                LogDebugInfo($"ConnectionDialog: Error in find device action: {ex.Message}");
             }
         }
 
@@ -293,6 +360,7 @@ namespace coiled_tubing_app
             _buttonFindDevice.IsEnabled = !isLoading;
             _loadingProgressRing.IsActive = isLoading;
             _loadingProgressRing.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
+            _loadingTextBlock.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
 
             if (isLoading)
             {
@@ -311,13 +379,23 @@ namespace coiled_tubing_app
 
                 var loadingText = new TextBlock
                 {
-                    Text = "Searching..."
+                    Text = "Searching Device..."
                 };
 
                 loadingContent.Children.Add(loadingIcon);
                 loadingContent.Children.Add(loadingText);
                 _buttonFindDevice.Content = loadingContent;
+
+                // Hide result panel while loading
                 _resultPanel.Visibility = Visibility.Collapsed;
+
+                // Make the progress ring more prominent
+                _loadingProgressRing.Width = 40;
+                _loadingProgressRing.Height = 40;
+                _loadingProgressRing.Margin = new Thickness(0, 15, 0, 5);
+
+                // Update loading text
+                _loadingTextBlock.Text = "Please wait while searching for devices...";
             }
             else
             {
@@ -342,6 +420,11 @@ namespace coiled_tubing_app
                 normalContent.Children.Add(normalIcon);
                 normalContent.Children.Add(normalText);
                 _buttonFindDevice.Content = normalContent;
+
+                // Reset progress ring size
+                _loadingProgressRing.Width = 30;
+                _loadingProgressRing.Height = 30;
+                _loadingProgressRing.Margin = new Thickness(0, 10, 0, 0);
             }
         }
 
@@ -367,6 +450,22 @@ namespace coiled_tubing_app
             }
         }
 
+        private void ShowAnalogData(float analogValue, int readResult)
+        {
+            _resultDataAnalog.Visibility = Visibility.Visible;
+
+            if (readResult == 0)
+            {
+                _resultDataAnalog.Text = $"Analog Data Reading:\nPoint 6.0 Value: {analogValue:F4}\nRead Result: Success ({readResult})";
+                _resultDataAnalog.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkBlue);
+            }
+            else
+            {
+                _resultDataAnalog.Text = $"Analog Data Reading:\nFailed to read Point 6.0\nRead Result: Error ({readResult})";
+                _resultDataAnalog.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
+            }
+        }
+
         private void ShowErrorResult(string errorMessage)
         {
             _resultPanel.Visibility = Visibility.Visible;
@@ -387,16 +486,16 @@ namespace coiled_tubing_app
                 if (!int.TryParse(_portTextBox.Text?.Trim(), out int port))
                 {
                     port = 502; // Default port if parsing fails
-                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Invalid port, using default 502");
+                    LogDebugInfo("ConnectionDialog: Invalid port, using default 502");
                 }
 
                 if (!int.TryParse(_timeoutTextBox.Text?.Trim(), out int timeout))
                 {
                     timeout = 5000; // Default timeout if parsing fails
-                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Invalid timeout, using default 5000");
+                    LogDebugInfo("ConnectionDialog: Invalid timeout, using default 5000");
                 }
 
-                System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Connect clicked with Host={host}, Port={port}, Timeout={timeout}");
+                LogDebugInfo($"ConnectionDialog: Connect clicked with Host={host}, Port={port}, Timeout={timeout}");
 
                 // If device hasn't been found yet, try to connect first
                 if (i32Result != 0)
@@ -407,41 +506,55 @@ namespace coiled_tubing_app
                     // Show loading
                     ShowLoadingState(true);
 
-                    i32Result = OptoMMP.Open(host, port, OptoMMP.Connection.Tcp, timeout, true);
+                    // Run connection on background thread to avoid blocking UI
+                    i32Result = await Task.Run(() =>
+                    {
+                        return mmp.Open(host, port, OptoMMP.Connection.Tcp, timeout, true);
+                    });
 
-                    // Update UI on the UI thread
-                    DispatcherQueue.TryEnqueue(() =>
-                        {
-                            // Hide loading and show result
-                            ShowLoadingState(false);
-                            ShowConnectionResult(i32Result, host, port);
+                    // Hide loading and show result
+                    ShowLoadingState(false);
+                    ShowConnectionResult(i32Result, host, port);
 
-                            if (i32Result == 0)
-                            {
-                                System.Diagnostics.Debug.WriteLine("ConnectionDialog: Connection successful, dialog will close");
-                                // Close dialog programmatically after successful connection
-                                Task.Delay(1500).ContinueWith(_ =>
-                                {
-                                    DispatcherQueue.TryEnqueue(() => this.Hide());
-                                });
-                            }
-                            else
-                            {
-                                System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Connection failed with error code: {i32Result}");
-                            }
-                        });
+                    if (i32Result == 0)
+                    {
+                        LogDebugInfo("ConnectionDialog: Connection successful, dialog will close");
+
+                        // Jika berhasil maka coba test dapatkan data analog
+                        float outputs = 0.0f;
+                        int analogReadResult = mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(6, 0), out outputs);
+
+                        // Tampilkan outputs di text block
+                        ShowAnalogData(outputs, analogReadResult);
+
+                        LogDebugInfo($"ConnectionDialog: Analog read result: {analogReadResult}, Value: {outputs}");
+                    }
+                    else
+                    {
+                        LogDebugInfo($"ConnectionDialog: Connection failed with error code: {i32Result}");
+                    }
                 }
                 else
                 {
                     // Device already connected successfully
-                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Using existing successful connection");
+                    LogDebugInfo("ConnectionDialog: Using existing successful connection");
+
+                    // Try to read analog data since connection is already established
+                    float outputs;
+                    int analogReadResult = mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(6, 0), out outputs);
+
+                    System.Diagnostics.Debug.WriteLine($"Analog read result: {analogReadResult}, Value: {outputs}");
+                    // Show the analog data
+                    ShowAnalogData(outputs, analogReadResult);
+
+                    LogDebugInfo($"ConnectionDialog: Analog read result: {analogReadResult}, Value: {outputs}");
                 }
             }
             catch (Exception ex)
             {
                 ShowLoadingState(false);
                 ShowErrorResult(ex.Message);
-                System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Error in connect action: {ex.Message}");
+                LogDebugInfo($"ConnectionDialog: Error in connect action: {ex.Message}");
                 args.Cancel = true;
             }
         }

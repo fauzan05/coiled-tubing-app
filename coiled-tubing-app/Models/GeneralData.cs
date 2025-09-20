@@ -1,3 +1,5 @@
+using System;
+
 namespace coiled_tubing_app.Models
 {
     public class GeneralData
@@ -17,5 +19,8 @@ namespace coiled_tubing_app.Models
         public string ServiceDistrictBoat { get; set; } = string.Empty;
         public string BjRepresentative { get; set; } = string.Empty;
         public string JobNumber { get; set; } = string.Empty;
+        
+        // Add ConnectionSettings property
+        public ConnectionSettings? ConnectionSettings { get; set; }
     }
 }

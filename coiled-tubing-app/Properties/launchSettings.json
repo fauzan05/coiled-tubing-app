@@ -5,7 +5,8 @@
       "nativeDebugging": true
     },
     "coiled-tubing-app (Unpackaged)": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "nativeDebugging": true
     }
   }
 }
