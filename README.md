@@ -2,7 +2,7 @@
 
 A Windows application for monitoring and managing coiled tubing operations in the oil and gas industry. Built with .NET 8 and WinUI 3, it provides real-time data visualization, sensor monitoring, and operational management.
 
-## Features
+## ⚙️ Features
 
 - Real-time dashboard: temperature, pressure, flow rates, drilling progress
 - Interactive charts using LiveCharts: line, column, pie, area, scatter
@@ -14,7 +14,7 @@ A Windows application for monitoring and managing coiled tubing operations in th
 - File history tracking
 - Login window for basic access control
 
-## Technology Stack
+## 💻 Technology Stack
 
 Core technologies
 - .NET 8.0
@@ -31,7 +31,7 @@ Libraries and dependencies
 - Microsoft.WindowsAppSDK (1.7.250606001)
 - OptoMMP_Standard_2_0 (external DLL for hardware integration)
 
-## System Requirements
+## ⚡ System Requirements
 
 Minimum
 - Windows 10 version 1903 (build 18362) or later
@@ -46,7 +46,7 @@ Additional
 - Microsoft Visual C++ 2015-2022 Redistributable (x64)
 - Windows App SDK Runtime
 
-## Installation and Setup
+## 📦 Installation & Setup
 
 1) Clone the repository
 
@@ -74,7 +74,7 @@ Additional
 
    dotnet run --project coiled-tubing-app
 
-## Quick Start
+## 🚀 Quick Start Guide
 
 - Run the app via Visual Studio or dotnet run
 - Login window appears; sign in
@@ -91,45 +91,52 @@ Additional
 
 ## Recording Data
 
-- Open the Sensor page
-- Add Record to create a new operational record and select charts
-- Save records and load them later
-- Use history actions to refresh or delete entries
+## 📁 Project Structure
 
-## Managing Connections
+📂 coiled-tubing-app  
+ ┣ 📂 Models  
+ ┃ ┣ 📄 ChartRecord.cs  
+ ┃ ┣ 📄 ChartItem.cs  
+ ┃ ┣ 📄 FileHistoryItem.cs  
+ ┃ ┣ 📄 GeneralData.cs  
+ ┃ ┗ 📄 HistoryTableItem.cs  
+ ┣ 📂 Services  
+ ┃ ┣ 📄 ChartService.cs  
+ ┃ ┣ 📄 FileHistoryService.cs  
+ ┃ ┗ 📄 SimpleFileHistoryService.cs  
+ ┣ 📂 ViewModels  
+ ┃ ┣ 📄 ChartViewModel.cs  
+ ┃ ┗ 📄 DashboardViewModel.cs  
+ ┣ 📂 Assets  
+ ┣ 📂 Pages & Views  
+ ┃ ┣ 📄 DashboardPage.xaml  
+ ┃ ┣ 📄 SensorPage.xaml  
+ ┃ ┣ 📄 LoginPage.xaml  
+ ┃ ┣ 📄 LoginWindow.xaml  
+ ┃ ┗ 📄 MainWindow.xaml  
+ ┣ 📂 Dialogs  
+ ┃ ┣ 📄 ChartSelectionDialog.xaml  
+ ┃ ┣ 📄 ConnectionDialog.cs  
+ ┃ ┗ 📄 GeneralDataDialog.cs  
+ ┣ 📄 App.xaml.cs  
+ ┗ 📄 README.md  
+
+## 💡 Key Features Explained
+
+### Data Visualization
+The application uses LiveCharts for creating interactive, real-time charts:
+- **Line Charts**: Temperature and depth monitoring
+- **Column Charts**: Pressure analysis
+- **Pie Charts**: Well status distribution
+- **Area Charts**: Flow rate trends
+- **Scatter Plots**: Equipment efficiency metrics
 
 - Open Connection settings
 - Configure device parameters and OptoMMP connectivity
 
 ## Project Structure
 
-coiled-tubing-app/
-  coiled-tubing-app/
-    Models/
-      ChartRecord.cs
-      ChartItem.cs
-      FileHistoryItem.cs
-      GeneralData.cs
-      HistoryTableItem.cs
-    Services/
-      ChartService.cs
-      FileHistoryService.cs
-      SimpleFileHistoryService.cs
-    ViewModels/
-      ChartViewModel.cs
-      DashboardViewModel.cs
-    Pages and Views/
-      DashboardPage.xaml
-      SensorPage.xaml
-      LoginPage.xaml
-      LoginWindow.xaml
-      MainWindow.xaml
-    Dialogs/
-      ChartSelectionDialog.xaml
-      ConnectionDialog.cs
-      GeneralDataDialog.cs
-    App.xaml.cs
-  README.md
+## 🔧 Troubleshooting
 
 ## Troubleshooting
 
@@ -152,7 +159,7 @@ Logging
 - NLog is used for logging
 - See Visual Studio Output window and configured log targets (if present)
 
-## Contributing
+## 🤝 Contributing
 
 - Fork the repository
 - Create a feature branch (git checkout -b feature/name)
@@ -161,25 +168,26 @@ Logging
 
 Guidelines
 - Follow C# coding conventions
-- Use MVVM for UI code
-- Add tests where applicable
-- Update documentation when public behavior changes
+- Use MVVM pattern for UI components
+- Add unit tests for new features
+- Update documentation for API changes
 
-## License
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 💬 Support
 
 This project is licensed under the MIT License. See the LICENSE file if included.
 
-## Support
+## 📅 Version History
 
 - GitHub issues: https://github.com/fauzan05/coiled-tubing-app/issues
 
-## Version History
+## 🙏 Acknowledgments
 
 - v1.0.0 - Initial release with dashboard and monitoring features
 
 ## Acknowledgments
 
-- LiveChartsCore
-- Microsoft Windows App SDK and WinUI 3
-- SkiaSharp
-- CommunityToolkit.Mvvm
+**Note**: This application is designed for professional oil and gas operations. Ensure proper training and safety protocols when using with actual equipment.
