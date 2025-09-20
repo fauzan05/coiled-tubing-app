@@ -3,6 +3,8 @@ using Microsoft.UI.Xaml.Controls;
 using OptoMMP6;
 using System;
 using System.Threading.Tasks;
+using System.Text;
+
 
 namespace coiled_tubing_app
 {
@@ -343,13 +345,9 @@ namespace coiled_tubing_app
                 {
                     LogDebugInfo("ConnectionDialog: Device connection successful");
                     // Jika berhasil maka coba test dapatkan data analog
-                    float outputs = 0.0f;
-                    int analogReadResult = mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(6, 0), out outputs);
-                    // Tampilkan outputs di text block
-
-                    ShowAnalogData(outputs, analogReadResult);
+                    await ReadAllSensorsOnceAsync();
                     StartPolling();
-                    LogDebugInfo($"ConnectionDialog: Analog read result: {analogReadResult}, Value: {outputs}");
+                  
 
                 }
                 else
@@ -539,15 +537,7 @@ namespace coiled_tubing_app
             _isReading = true;
             try
             {
-                float outputs = 0.0f;
-                // IO ke device di thread pool supaya UI tidak nge-freeze
-                int analogReadResult = await Task.Run(() =>
-                {
-                    return mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(6, 0), out outputs);
-                });
-
-                // Update UI
-                ShowAnalogData(outputs, analogReadResult);
+                await ReadAllSensorsOnceAsync();
             }
             catch (Exception ex)
             {
@@ -604,15 +594,8 @@ namespace coiled_tubing_app
                     {
                         LogDebugInfo("ConnectionDialog: Connection successful, dialog will close");
 
-                        // Jika berhasil maka coba test dapatkan data analog
-                        float outputs = 0.0f;
-                        int analogReadResult = mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(6, 0), out outputs);
-
-                        // Tampilkan outputs di text block
-                        ShowAnalogData(outputs, analogReadResult);
+                        await ReadAllSensorsOnceAsync();
                         StartPolling();
-
-                        LogDebugInfo($"ConnectionDialog: Analog read result: {analogReadResult}, Value: {outputs}");
                     }
                     else
                     {
@@ -624,16 +607,8 @@ namespace coiled_tubing_app
                     // Device already connected successfully
                     LogDebugInfo("ConnectionDialog: Using existing successful connection");
 
-                    // Try to read analog data since connection is already established
-                    float outputs;
-                    int analogReadResult = mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(6, 0), out outputs);
-
-                    System.Diagnostics.Debug.WriteLine($"Analog read result: {analogReadResult}, Value: {outputs}");
-                    // Show the analog data
-                    ShowAnalogData(outputs, analogReadResult);
+                    await ReadAllSensorsOnceAsync();
                     StartPolling();
-
-                    LogDebugInfo($"ConnectionDialog: Analog read result: {analogReadResult}, Value: {outputs}");
                 }
             }
             catch (Exception ex)
@@ -644,5 +619,38 @@ namespace coiled_tubing_app
                 args.Cancel = true;
             }
         }
+        // Baca semua sensor sekali (6 analog) + placeholder 3 sensor lainnya
+        private async Task ReadAllSensorsOnceAsync()
+        {
+            float a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0;
+
+            int r1 = await Task.Run(() => mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(5, 0), out a1)); // A1 mod5.0
+            int r2 = await Task.Run(() => mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(5, 1), out a2)); // A2 mod5.1
+            int r3 = await Task.Run(() => mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(5, 2), out a3)); // A3 mod5.2
+            int r4 = await Task.Run(() => mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(5, 3), out a4)); // A4 mod5.3
+            int r5 = await Task.Run(() => mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(6, 0), out a5)); // A5 mod6.0
+            int r6 = await Task.Run(() => mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(6, 1), out a6)); // A6 mod6.1
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("Sensors:");
+
+            // Konversi 4–20 mA ke psi sesuai rentang tiap sensor
+            sb.AppendLine(r1 == 0 ? $"A1 Wellhead (mod5.0, 0–5000 psi):  {a1:F3} mA  ≈  {MilliampToPsi(a1, 4, 20, 0, 5000):F1} psi" : $"A1 Wellhead: READ ERROR ({r1})");
+            sb.AppendLine(r2 == 0 ? $"A2 Circulating (mod5.1, 0–5000 psi):  {a2:F3} mA  ≈  {MilliampToPsi(a2, 4, 20, 0, 5000):F1} psi" : $"A2 Circulating: READ ERROR ({r2})");
+            sb.AppendLine(r3 == 0 ? $"A3 Pipe Heavy (mod5.2, 0–1500 psi):  {a3:F3} mA  ≈  {MilliampToPsi(a3, 4, 20, 0, 1500):F1} psi" : $"A3 Pipe Heavy: READ ERROR ({r3})");
+            sb.AppendLine(r4 == 0 ? $"A4 Pipe Light (mod5.3, 0–1500 psi):  {a4:F3} mA  ≈  {MilliampToPsi(a4, 4, 20, 0, 1500):F1} psi" : $"A4 Pipe Light: READ ERROR ({r4})");
+            sb.AppendLine(r5 == 0 ? $"A5 Wellhead HP (mod6.0, 0–15000 psi):  {a5:F3} mA  ≈  {MilliampToPsi(a5, 4, 20, 0, 15000):F1} psi" : $"A5 Wellhead HP: READ ERROR ({r5})");
+            sb.AppendLine(r6 == 0 ? $"A6 Circulating HP (mod6.1, 0–15000 psi):  {a6:F3} mA  ≈  {MilliampToPsi(a6, 4, 20, 0, 15000):F1} psi" : $"A6 Circulating HP: READ ERROR ({r6})");
+
+            // Placeholder 3 sensor lain (implementasi DI / encoder tergantung modul yang dipakai)
+            sb.AppendLine("D1 Fluid Prox (DI @ modul 2 pin 1) - TODO implement baca DI");
+            sb.AppendLine("D2 N2 Prox (DI @ modul 2 pin 3) - TODO implement baca DI");
+            sb.AppendLine("E1 CT Depth/Speed Encoder (Quadrature A/B) - TODO implement baca encoder");
+
+            _resultDataAnalog.Visibility = Visibility.Visible;
+            _resultDataAnalog.Text = sb.ToString();
+            _resultDataAnalog.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkBlue);
+        }
+
     }
 }
