@@ -64,7 +64,7 @@
   
   <ItemGroup>
     <Reference Include="OptoMMP_Standard_2_0">
-      <HintPath>..\..\..\..\Downloads\PAC-DEV-OPTOMMP-DOTNET R6.0b-001\Developer\OptoMMP_Standard_2_0.dll</HintPath>
+      <HintPath>D:\COSL\PAC-DEV-OPTOMMP-DOTNET R6.0b-001\Developer\OptoMMP_Standard_2_0.dll</HintPath>
     </Reference>
   </ItemGroup>
   

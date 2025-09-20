@@ -1,4 +1,4 @@
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using OptoMMP6;
 using System;
@@ -449,6 +449,19 @@ namespace coiled_tubing_app
                 _resultTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
             }
         }
+        // Convert 4–20 mA to 0–15000 psi
+        private static double MilliampToPsi(
+            double mA,
+            double minmA = 4.0,
+            double maxmA = 20.0,
+            double minPsi = 0.0,
+            double maxPsi = 15000.0)
+        {
+            if (double.IsNaN(mA) || double.IsInfinity(mA)) return double.NaN;
+            if (mA < minmA) mA = minmA;
+            if (mA > maxmA) mA = maxmA;
+            return (mA - minmA) * (maxPsi - minPsi) / (maxmA - minmA) + minPsi;
+        }
 
         private void ShowAnalogData(float analogValue, int readResult)
         {
@@ -456,15 +469,28 @@ namespace coiled_tubing_app
 
             if (readResult == 0)
             {
-                _resultDataAnalog.Text = $"Analog Data Reading:\nPoint 6.0 Value: {analogValue:F4}\nRead Result: Success ({readResult})";
-                _resultDataAnalog.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkBlue);
+                // Assume analogValue in mA (4–20 mA). Convert to psi (0–15000 psi)
+                double mA = analogValue;
+                double psi = MilliampToPsi(mA);
+
+                _resultDataAnalog.Text =
+                    $"Analog Data Reading:\n" +
+                    $"Point 6.0: {mA:F3} mA  ≈  {psi:F1} psi\n" +
+                    $"Read Result: Success ({readResult})";
+
+                _resultDataAnalog.Foreground =
+                    new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkBlue);
             }
             else
             {
-                _resultDataAnalog.Text = $"Analog Data Reading:\nFailed to read Point 6.0\nRead Result: Error ({readResult})";
-                _resultDataAnalog.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
+                _resultDataAnalog.Text =
+                    $"Analog Data Reading:\nFailed to read Point 6.0\nRead Result: Error ({readResult})";
+
+                _resultDataAnalog.Foreground =
+                    new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
             }
         }
+
 
         private void ShowErrorResult(string errorMessage)
         {
