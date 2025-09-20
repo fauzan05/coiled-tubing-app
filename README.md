@@ -1,242 +1,185 @@
 # Coiled Tubing Operations App
 
-A comprehensive Windows application for monitoring and managing coiled tubing operations in the oil and gas industry. Built with .NET 8 and WinUI 3, this application provides real-time data visualization, sensor monitoring, and operational management capabilities.
+A Windows application for monitoring and managing coiled tubing operations in the oil and gas industry. Built with .NET 8 and WinUI 3, it provides real-time data visualization, sensor monitoring, and operational management.
 
-## ?? Features
+## Features
 
-- **Real-time Dashboard**: Monitor temperature, pressure, flow rates, and drilling progress
-- **Advanced Data Visualization**: Interactive charts using LiveCharts with multiple chart types (line, column, pie, area, scatter)
-- **Sensor Management**: Real-time sensor data monitoring and historical data analysis
-- **Equipment Integration**: OptoMMP hardware integration for industrial control systems
-- **Data Recording**: Save and load operational records with comprehensive history management
-- **General Data Management**: Track operational parameters and well information
-- **Connection Management**: Configure and manage hardware connections
-- **File History System**: Comprehensive tracking of all operational records
-- **User Authentication**: Secure login system for operational access
+- Real-time dashboard: temperature, pressure, flow rates, drilling progress
+- Interactive charts using LiveCharts: line, column, pie, area, scatter
+- Sensor management and historical data analysis
+- Hardware integration via OptoMMP
+- Record system: save and load operational records with history
+- General data management for operations and wells
+- Connection settings for hardware
+- File history tracking
+- Login window for basic access control
 
-## ??? Technology Stack
+## Technology Stack
 
-### Core Technologies
-- **.NET 8.0** - Latest .NET framework for Windows applications
-- **WinUI 3** - Modern Windows UI framework
-- **C#** - Primary programming language
-- **XAML** - UI markup language
+Core technologies
+- .NET 8.0
+- WinUI 3
+- C#
+- XAML
 
-### Key Libraries & Dependencies
-- **LiveChartsCore.SkiaSharpView.WinUI** (v2.0.0-rc5.3) - Advanced charting and data visualization
-- **SkiaSharp** (v3.119.0) - Cross-platform 2D graphics
-- **SkiaSharp.Views.WinUI** (v3.119.0) - SkiaSharp integration for WinUI
-- **CommunityToolkit.Mvvm** (v8.4.0) - MVVM toolkit for modern app development
-- **NLog** (v6.0.4) - Advanced logging framework
-- **Microsoft.WindowsAppSDK** (v1.7.250606001) - Windows App SDK
-- **OptoMMP_Standard_2_0** - Industrial hardware integration library
+Libraries and dependencies
+- LiveChartsCore.SkiaSharpView.WinUI (2.0.0-rc5.3)
+- SkiaSharp (3.119.0)
+- SkiaSharp.Views.WinUI (3.119.0)
+- CommunityToolkit.Mvvm (8.4.0)
+- NLog (6.0.4)
+- Microsoft.WindowsAppSDK (1.7.250606001)
+- OptoMMP_Standard_2_0 (external DLL for hardware integration)
 
-## ?? System Requirements
+## System Requirements
 
-### Minimum Requirements
-- **Operating System**: Windows 10 version 1903 (build 18362) or later
-- **Architecture**: 64-bit (x64, ARM64 supported)
-- **Target Platform**: Windows 10.0.19041.0 (minimum: 10.0.17763.0)
-- **.NET Runtime**: .NET 8.0 Desktop Runtime
-- **Memory**: 4 GB RAM (8 GB recommended)
-- **Storage**: 500 MB available disk space
-- **Graphics**: OpenGL 2.0 compatible graphics card
+Minimum
+- Windows 10 version 1903 (build 18362) or later
+- 64-bit OS (x64 or ARM64)
+- Target platform: Windows 10.0.19041.0 (minimum 10.0.17763.0)
+- .NET 8.0 Desktop Runtime
+- 4 GB RAM (8 GB recommended)
+- 500 MB free disk space
+- OpenGL 2.0 compatible graphics
 
-### Additional Requirements
+Additional
 - Microsoft Visual C++ 2015-2022 Redistributable (x64)
 - Windows App SDK Runtime
 
-## ?? Installation & Setup
+## Installation and Setup
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/fauzan05/coiled-tubing-app.git
-cd coiled-tubing-app
-```
+1) Clone the repository
 
-### 2. Install Prerequisites
+   git clone https://github.com/fauzan05/coiled-tubing-app.git
+   cd coiled-tubing-app
 
-#### Install .NET 8 SDK
-Download and install the .NET 8 SDK from [Microsoft's official website](https://dotnet.microsoft.com/download/dotnet/8.0).
+2) Install .NET 8 SDK
+- Download from https://dotnet.microsoft.com/download/dotnet/8.0
+- Verify: dotnet --version (should print 8.0.x)
 
-#### Verify Installation
-```bash
-dotnet --version
-```
-Should return version 8.0.x or higher.
+3) Restore dependencies
 
-### 3. Restore Dependencies
-Navigate to the project directory and restore NuGet packages:
-```bash
-cd coiled-tubing-app
-dotnet restore
-```
+   cd coiled-tubing-app
+   dotnet restore
 
-### 4. Hardware Integration Setup (Optional)
-If you plan to use hardware integration features:
-1. Ensure OptoMMP_Standard_2_0.dll is available in your system
-2. The application expects this DLL in the downloads folder as referenced in the project
-3. Contact your hardware vendor for the latest OptoMMP libraries
+4) Optional: hardware integration setup
+- Ensure OptoMMP_Standard_2_0.dll is available
+- The project references a local path in the .csproj; adjust the HintPath if needed
 
-### 5. Build the Application
-```bash
-dotnet build --configuration Release
-```
+5) Build
 
-### 6. Run the Application
-```bash
-dotnet run --project coiled-tubing-app
-```
+   dotnet build --configuration Release
 
-## ?? Quick Start Guide
+6) Run
 
-### First Launch
-1. Launch the application from Visual Studio or using `dotnet run`
-2. The login window will appear - enter your credentials
-3. Once authenticated, you'll see the main dashboard with operational charts
+   dotnet run --project coiled-tubing-app
 
-### Using the Dashboard
-- **Temperature Monitoring**: Real-time downhole temperature tracking
-- **Pressure Analysis**: Surface and downhole pressure comparison
-- **Well Status Overview**: Pie chart showing active, maintenance, standby, and offline wells
-- **Flow Rate Trends**: Oil and gas flow rate monitoring
-- **Equipment Efficiency**: Scatter plot of equipment performance
-- **Drilling Progress**: Current vs target depth visualization
+## Quick Start
 
-### Recording Data
-1. Navigate to the "Sensor" page
-2. Click "Add Record" to create new operational records
-3. Select charts to include in your record
-4. Save records for future analysis
-5. Use "Load Record" to view historical data
+- Run the app via Visual Studio or dotnet run
+- Login window appears; sign in
+- The dashboard shows multiple operational charts
 
-### Managing Connections
-1. Click the "Connection" button to configure hardware connections
-2. Set up your OptoMMP device connections
-3. Configure communication parameters
+## Using the Dashboard
 
-## ?? Project Structure
+- Temperature monitoring: downhole temperature trends
+- Pressure analysis: surface and downhole comparison
+- Well status overview: distribution of states
+- Flow rate trends: oil and gas
+- Equipment efficiency: scatter plot
+- Drilling progress: current vs target depth
 
-```
+## Recording Data
+
+- Open the Sensor page
+- Add Record to create a new operational record and select charts
+- Save records and load them later
+- Use history actions to refresh or delete entries
+
+## Managing Connections
+
+- Open Connection settings
+- Configure device parameters and OptoMMP connectivity
+
+## Project Structure
+
 coiled-tubing-app/
-??? coiled-tubing-app/
-?   ??? Models/                    # Data models
-?   ?   ??? ChartRecord.cs
-?   ?   ??? ChartItem.cs
-?   ?   ??? FileHistoryItem.cs
-?   ?   ??? GeneralData.cs
-?   ?   ??? HistoryTableItem.cs
-?   ??? Services/                  # Business logic services
-?   ?   ??? ChartService.cs
-?   ?   ??? FileHistoryService.cs
-?   ?   ??? SimpleFileHistoryService.cs
-?   ??? ViewModels/               # MVVM view models
-?   ?   ??? ChartViewModel.cs
-?   ?   ??? DashboardViewModel.cs
-?   ??? Assets/                   # Application assets
-?   ??? Pages & Views/           # UI components
-?   ?   ??? DashboardPage.xaml
-?   ?   ??? SensorPage.xaml
-?   ?   ??? LoginPage.xaml
-?   ?   ??? LoginWindow.xaml
-?   ?   ??? MainWindow.xaml
-?   ??? Dialogs/                 # Modal dialogs
-?   ?   ??? ChartSelectionDialog.xaml
-?   ?   ??? ConnectionDialog.cs
-?   ?   ??? GeneralDataDialog.cs
-?   ??? App.xaml.cs              # Application entry point
-??? README.md
-```
+  coiled-tubing-app/
+    Models/
+      ChartRecord.cs
+      ChartItem.cs
+      FileHistoryItem.cs
+      GeneralData.cs
+      HistoryTableItem.cs
+    Services/
+      ChartService.cs
+      FileHistoryService.cs
+      SimpleFileHistoryService.cs
+    ViewModels/
+      ChartViewModel.cs
+      DashboardViewModel.cs
+    Pages and Views/
+      DashboardPage.xaml
+      SensorPage.xaml
+      LoginPage.xaml
+      LoginWindow.xaml
+      MainWindow.xaml
+    Dialogs/
+      ChartSelectionDialog.xaml
+      ConnectionDialog.cs
+      GeneralDataDialog.cs
+    App.xaml.cs
+  README.md
 
-## ?? Key Features Explained
+## Troubleshooting
 
-### Data Visualization
-The application uses LiveCharts for creating interactive, real-time charts:
-- **Line Charts**: Temperature and depth monitoring
-- **Column Charts**: Pressure analysis
-- **Pie Charts**: Well status distribution
-- **Area Charts**: Flow rate trends
-- **Scatter Plots**: Equipment efficiency metrics
+Build errors
+- Run: dotnet clean, dotnet restore, dotnet build
 
-### File Management
-- **Record System**: Save operational snapshots with selected charts
-- **History Tracking**: Comprehensive file history with metadata
-- **Export/Import**: Load previously saved records for analysis
+Missing dependencies
+- Run: dotnet restore --force
+- Reinstall .NET 8 Desktop Runtime and Windows App SDK Runtime
 
-### Hardware Integration
-- **OptoMMP Support**: Connect to industrial control hardware
-- **Real-time Data**: Live sensor data acquisition
-- **Connection Management**: Configure multiple device connections
+Runtime or rendering issues
+- Verify Windows version
+- Update graphics drivers (SkiaSharp depends on GPU stack)
 
-## ?? Troubleshooting
+Hardware connection issues
+- Verify OptoMMP library location and drivers
+- Check device connectivity settings
 
-### Common Issues
+Logging
+- NLog is used for logging
+- See Visual Studio Output window and configured log targets (if present)
 
-#### Build Errors
-```bash
-# Clean and rebuild
-dotnet clean
-dotnet restore
-dotnet build
-```
+## Contributing
 
-#### Missing Dependencies
-```bash
-# Restore NuGet packages
-dotnet restore --force
-```
+- Fork the repository
+- Create a feature branch (git checkout -b feature/name)
+- Commit and push changes
+- Open a Pull Request
 
-#### Runtime Errors
-1. Ensure .NET 8 Desktop Runtime is installed
-2. Check Windows version compatibility
-3. Verify graphics driver support for SkiaSharp
-
-#### Hardware Connection Issues
-1. Verify OptoMMP library installation
-2. Check device connection settings
-3. Ensure proper driver installation
-
-### Logging
-The application uses NLog for comprehensive logging. Check logs for detailed error information:
-- Debug output in Visual Studio Output window
-- Application logs (location configurable via NLog configuration)
-
-## ?? Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
+Guidelines
 - Follow C# coding conventions
-- Use MVVM pattern for UI components
-- Add unit tests for new features
-- Update documentation for API changes
+- Use MVVM for UI code
+- Add tests where applicable
+- Update documentation when public behavior changes
 
-## ?? License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the LICENSE file if included.
 
-## ?? Support
+## Support
 
-- **Repository**: [GitHub Issues](https://github.com/fauzan05/coiled-tubing-app/issues)
-- **Documentation**: Check the `/docs` folder for detailed documentation
-- **Community**: Join our discussions in GitHub Discussions
+- GitHub issues: https://github.com/fauzan05/coiled-tubing-app/issues
 
-## ?? Version History
+## Version History
 
-- **v1.0.0** - Initial release with core dashboard and monitoring features
-- See [CHANGELOG.md](CHANGELOG.md) for detailed version history
+- v1.0.0 - Initial release with dashboard and monitoring features
 
-## ?? Acknowledgments
+## Acknowledgments
 
-- LiveCharts team for excellent charting library
-- Microsoft for WinUI 3 and .NET 8
-- SkiaSharp team for cross-platform graphics
-- Community contributors
-
----
-
-**Note**: This application is designed for professional oil and gas operations. Ensure proper training and safety protocols when using with actual equipment.
+- LiveChartsCore
+- Microsoft Windows App SDK and WinUI 3
+- SkiaSharp
+- CommunityToolkit.Mvvm

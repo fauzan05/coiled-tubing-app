@@ -1,27 +1,27 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using OptoMMP6;
 using System;
 using System.Threading.Tasks;
-using OptoMMP6;
 
 namespace coiled_tubing_app
 {
     public sealed class ConnectionDialog : ContentDialog
     {
         internal static OptoMMP OptoMMP = new OptoMMP();
-        
+
         // Input fields
         private readonly TextBox _hostTextBox;
         private readonly TextBox _portTextBox;
         private readonly TextBox _timeoutTextBox;
-        
+
         // UI elements for loading and results
         private readonly Button _buttonFindDevice;
         private readonly ProgressRing _loadingProgressRing;
         private readonly TextBlock _resultTextBlock;
         private readonly StackPanel _resultPanel;
         private readonly FontIcon _resultIcon;
-        
+
         private int i32Result;
 
         public ConnectionDialog()
@@ -181,11 +181,11 @@ namespace coiled_tubing_app
             this.Height = 450;
             this.MaxHeight = 550;
             this.Content = scrollViewer;
-            
+
             // Set to center
             this.HorizontalAlignment = HorizontalAlignment.Center;
             this.VerticalAlignment = VerticalAlignment.Center;
-            
+
             // Event handler for connect button
             this.PrimaryButtonClick += OnConnectButtonClick;
         }
@@ -235,7 +235,7 @@ namespace coiled_tubing_app
             return grid;
         }
 
-        private async void OnButtonFindDeviceClick(object sender, RoutedEventArgs e)
+        private void OnButtonFindDeviceClick(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -244,7 +244,7 @@ namespace coiled_tubing_app
 
                 // Get values from input fields and convert to appropriate types
                 string host = _hostTextBox.Text?.Trim() ?? "";
-                
+
                 // Convert port and timeout to int with validation
                 if (!int.TryParse(_portTextBox.Text?.Trim(), out int port))
                 {
@@ -260,27 +260,24 @@ namespace coiled_tubing_app
 
                 System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Find Device clicked with Host={host}, Port={port}, Timeout={timeout}");
 
-                // Simulate some delay for better UX (you can remove this if not needed)
-                await Task.Delay(1000);
+                int i32Result = OptoMMP.Open(host, port, OptoMMP.Connection.Tcp, timeout, true);
 
-                // Implement find device logic using OptoMMP with correct parameters
-                await Task.Run(() =>
+                // Update UI on the UI thread
+                DispatcherQueue.TryEnqueue(() =>
                 {
-                    i32Result = OptoMMP.Open(host, port, OptoMMP.Connection.Tcp, timeout, true);
+                    // Hide loading and show results
+                    ShowLoadingState(false);
+                    ShowConnectionResult(i32Result, host, port);
+
+                    if (i32Result == 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine("ConnectionDialog: Device connection successful");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Device connection failed with error code: {i32Result}");
+                    }
                 });
-
-                // Hide loading and show results
-                ShowLoadingState(false);
-                ShowConnectionResult(i32Result, host, port);
-                
-                if (i32Result == 0)
-                {
-                    System.Diagnostics.Debug.WriteLine("ConnectionDialog: Device connection successful");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Device connection failed with error code: {i32Result}");
-                }
             }
             catch (Exception ex)
             {
@@ -296,7 +293,7 @@ namespace coiled_tubing_app
             _buttonFindDevice.IsEnabled = !isLoading;
             _loadingProgressRing.IsActive = isLoading;
             _loadingProgressRing.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
-            
+
             if (isLoading)
             {
                 var loadingContent = new StackPanel
@@ -351,7 +348,7 @@ namespace coiled_tubing_app
         private void ShowConnectionResult(int resultCode, string host, int port)
         {
             _resultPanel.Visibility = Visibility.Visible;
-            
+
             if (resultCode == 0)
             {
                 // Success
@@ -385,7 +382,7 @@ namespace coiled_tubing_app
             {
                 // Get values from input fields and convert to appropriate types
                 string host = _hostTextBox.Text?.Trim() ?? "";
-                
+
                 // Convert port and timeout to int with validation
                 if (!int.TryParse(_portTextBox.Text?.Trim(), out int port))
                 {
@@ -400,37 +397,39 @@ namespace coiled_tubing_app
                 }
 
                 System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Connect clicked with Host={host}, Port={port}, Timeout={timeout}");
-                
+
                 // If device hasn't been found yet, try to connect first
                 if (i32Result != 0)
                 {
                     // Defer the dialog closing to perform connection
                     args.Cancel = true;
-                    
+
                     // Show loading
                     ShowLoadingState(true);
-                    
-                    // Try to connect
-                    await Task.Run(() =>
-                    {
-                        i32Result = OptoMMP.Open(host, port, OptoMMP.Connection.Tcp, timeout, true);
-                    });
-                    
-                    // Hide loading and show result
-                    ShowLoadingState(false);
-                    ShowConnectionResult(i32Result, host, port);
-                    
-                    if (i32Result == 0)
-                    {
-                        System.Diagnostics.Debug.WriteLine("ConnectionDialog: Connection successful, dialog will close");
-                        // Close dialog programmatically after successful connection
-                        await Task.Delay(1500); // Show success message briefly
-                        this.Hide();
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Connection failed with error code: {i32Result}");
-                    }
+
+                    i32Result = OptoMMP.Open(host, port, OptoMMP.Connection.Tcp, timeout, true);
+
+                    // Update UI on the UI thread
+                    DispatcherQueue.TryEnqueue(() =>
+                        {
+                            // Hide loading and show result
+                            ShowLoadingState(false);
+                            ShowConnectionResult(i32Result, host, port);
+
+                            if (i32Result == 0)
+                            {
+                                System.Diagnostics.Debug.WriteLine("ConnectionDialog: Connection successful, dialog will close");
+                                // Close dialog programmatically after successful connection
+                                Task.Delay(1500).ContinueWith(_ =>
+                                {
+                                    DispatcherQueue.TryEnqueue(() => this.Hide());
+                                });
+                            }
+                            else
+                            {
+                                System.Diagnostics.Debug.WriteLine($"ConnectionDialog: Connection failed with error code: {i32Result}");
+                            }
+                        });
                 }
                 else
                 {
