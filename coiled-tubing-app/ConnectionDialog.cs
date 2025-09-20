@@ -26,6 +26,9 @@ namespace coiled_tubing_app
 
         // Add debug info display
         private readonly TextBlock _debugInfoTextBlock;
+        // Realtime polling
+        private readonly DispatcherTimer _pollTimer;
+        private bool _isReading = false;
 
         private int i32Result;
 
@@ -234,6 +237,13 @@ namespace coiled_tubing_app
 
             // Event handler for connect button
             this.PrimaryButtonClick += OnConnectButtonClick;
+            // Realtime polling: 1x per detik
+            _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _pollTimer.Tick += PollTimer_Tick;
+
+            // Hentikan polling ketika dialog ditutup
+            this.Closed += (s, e) => StopPolling();
+
         }
 
         private void LogDebugInfo(string message)
@@ -338,6 +348,7 @@ namespace coiled_tubing_app
                     // Tampilkan outputs di text block
 
                     ShowAnalogData(outputs, analogReadResult);
+                    StartPolling();
                     LogDebugInfo($"ConnectionDialog: Analog read result: {analogReadResult}, Value: {outputs}");
 
                 }
@@ -447,6 +458,8 @@ namespace coiled_tubing_app
                 _resultIcon.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
                 _resultTextBlock.Text = $"Connection Failed!\n\nCould not connect to {host}:{port}\nError Code: {resultCode}";
                 _resultTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red);
+                StopPolling();
+
             }
         }
         // Convert 4–20 mA to 0–15000 psi
@@ -500,6 +513,51 @@ namespace coiled_tubing_app
             _resultTextBlock.Text = $"Error Occurred!\n\n{errorMessage}";
             _resultTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Orange);
         }
+        private void StartPolling()
+        {
+            if (!_pollTimer.IsEnabled)
+            {
+                _pollTimer.Start();
+                LogDebugInfo("Polling started (1 Hz).");
+            }
+        }
+
+        private void StopPolling()
+        {
+            if (_pollTimer.IsEnabled)
+            {
+                _pollTimer.Stop();
+                LogDebugInfo("Polling stopped.");
+            }
+        }
+
+        private async void PollTimer_Tick(object? sender, object e)
+        {
+            // Jangan jalan kalau belum konek atau masih baca
+            if (i32Result != 0 || _isReading) return;
+
+            _isReading = true;
+            try
+            {
+                float outputs = 0.0f;
+                // IO ke device di thread pool supaya UI tidak nge-freeze
+                int analogReadResult = await Task.Run(() =>
+                {
+                    return mmp.ReadAnalogState64(OptoMMP.GetPointNumberFor64(6, 0), out outputs);
+                });
+
+                // Update UI
+                ShowAnalogData(outputs, analogReadResult);
+            }
+            catch (Exception ex)
+            {
+                LogDebugInfo($"PollTimer_Tick error: {ex.Message}");
+            }
+            finally
+            {
+                _isReading = false;
+            }
+        }
 
         private async void OnConnectButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
@@ -552,6 +610,7 @@ namespace coiled_tubing_app
 
                         // Tampilkan outputs di text block
                         ShowAnalogData(outputs, analogReadResult);
+                        StartPolling();
 
                         LogDebugInfo($"ConnectionDialog: Analog read result: {analogReadResult}, Value: {outputs}");
                     }
@@ -572,6 +631,7 @@ namespace coiled_tubing_app
                     System.Diagnostics.Debug.WriteLine($"Analog read result: {analogReadResult}, Value: {outputs}");
                     // Show the analog data
                     ShowAnalogData(outputs, analogReadResult);
+                    StartPolling();
 
                     LogDebugInfo($"ConnectionDialog: Analog read result: {analogReadResult}, Value: {outputs}");
                 }
