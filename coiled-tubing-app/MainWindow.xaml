@@ -17,7 +17,7 @@
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
 
-            <NavigationViewItem Content="Sensor Data" Tag="SensorPage">
+            <NavigationViewItem Content="Monitoring" Tag="MonitoringPage">
                 <NavigationViewItem.Icon>
                     <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D2;"/>
                 </NavigationViewItem.Icon>

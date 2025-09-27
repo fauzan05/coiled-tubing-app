@@ -18,11 +18,11 @@ namespace coiled_tubing_app.Services
         public FileHistoryService()
         {
             _historyItems = new List<FileHistoryItem>();
-            
+
             // Use a more reliable path for storing history
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var appFolder = Path.Combine(appDataPath, "CoiledTubingApp");
-            
+
             // Create directory if it doesn't exist
             try
             {
@@ -54,7 +54,7 @@ namespace coiled_tubing_app.Services
                 // Force reload from file to ensure we have latest data
                 await LoadHistoryAsync();
             }
-            
+
             var result = _historyItems.OrderByDescending(x => x.LastAccessed).ToList();
             System.Diagnostics.Debug.WriteLine($"GetHistoryAsync: Returning {result.Count} items");
             return result;
@@ -65,7 +65,7 @@ namespace coiled_tubing_app.Services
             try
             {
                 System.Diagnostics.Debug.WriteLine($"AddHistoryItemAsync: Adding {recordName} at {filePath}");
-                
+
                 if (!_isInitialized)
                 {
                     await LoadHistoryAsync();
@@ -73,7 +73,7 @@ namespace coiled_tubing_app.Services
                 }
 
                 var directory = Path.GetDirectoryName(filePath) ?? "";
-                
+
                 // Remove existing item with same file path if exists
                 var existingCount = _historyItems.Count;
                 _historyItems.RemoveAll(x => x.FilePath == filePath);
@@ -94,7 +94,7 @@ namespace coiled_tubing_app.Services
 
                 _historyItems.Add(historyItem);
                 System.Diagnostics.Debug.WriteLine($"AddHistoryItemAsync: Added item, total count now: {_historyItems.Count}");
-                
+
                 await SaveHistoryAsync();
                 System.Diagnostics.Debug.WriteLine($"AddHistoryItemAsync: Saved to file");
             }
@@ -115,7 +115,6 @@ namespace coiled_tubing_app.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"RemoveHistoryItemAsync error: {ex.Message}");
-                // Continue without failing
             }
         }
 
@@ -145,12 +144,12 @@ namespace coiled_tubing_app.Services
                         if (!string.IsNullOrEmpty(jsonContent))
                         {
                             var loadedItems = JsonSerializer.Deserialize<List<FileHistoryItem>>(jsonContent);
-                            
+
                             if (loadedItems != null)
                             {
                                 // Verify files still exist and filter out non-existent ones
                                 _historyItems = loadedItems.Where(item => File.Exists(item.FilePath)).ToList();
-                                
+
                                 // Save filtered list back if items were removed
                                 if (_historyItems.Count != loadedItems.Count)
                                 {
@@ -180,15 +179,15 @@ namespace coiled_tubing_app.Services
             try
             {
                 System.Diagnostics.Debug.WriteLine($"SaveHistorySync: Saving {_historyItems.Count} items to {_historyFilePath}");
-                
+
                 var jsonContent = JsonSerializer.Serialize(_historyItems, new JsonSerializerOptions
                 {
                     WriteIndented = true
                 });
-                
+
                 File.WriteAllText(_historyFilePath, jsonContent);
                 System.Diagnostics.Debug.WriteLine($"SaveHistorySync: Successfully saved to file");
-                
+
                 // Verify the file was written
                 if (File.Exists(_historyFilePath))
                 {

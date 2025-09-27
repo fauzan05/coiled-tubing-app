@@ -18,20 +18,6 @@ namespace coiled_tubing_app.Services
             _fileHistoryService = new FileHistoryService();
         }
 
-        // Daftar chart yang tersedia
-        public List<ChartItem> GetAvailableCharts()
-        {
-            return new List<ChartItem>
-            {
-                new ChartItem { Id = "temp_chart", Name = "Temperature Chart", Description = "Grafik suhu" },
-                new ChartItem { Id = "pressure_chart", Name = "Pressure Chart", Description = "Grafik tekanan" },
-                new ChartItem { Id = "flow_chart", Name = "Flow Rate Chart", Description = "Grafik laju aliran" },
-                new ChartItem { Id = "depth_chart", Name = "Depth Chart", Description = "Grafik kedalaman" },
-                new ChartItem { Id = "sensor_status", Name = "Sensor Status", Description = "Status sensor" },
-                new ChartItem { Id = "system_load", Name = "System Load", Description = "Beban sistem" }
-            };
-        }
-
         // Simpan record ke file .fxz dan return info file
         public async Task<(bool Success, string FilePath, string Directory)> SaveRecordAsync(ChartRecord record)
         {
@@ -151,12 +137,6 @@ namespace coiled_tubing_app.Services
 
                     if (record != null)
                     {
-                        // Ensure GeneralData is not null for backward compatibility
-                        if (record.GeneralData == null)
-                        {
-                            record.GeneralData = new GeneralData();
-                        }
-
                         // Add to history
                         await _fileHistoryService.AddHistoryItemAsync(record.RecordName, file.Path, FileHistoryType.Loaded);
 
@@ -188,12 +168,6 @@ namespace coiled_tubing_app.Services
                     var record = JsonSerializer.Deserialize<ChartRecord>(jsonString);
                     if (record != null)
                     {
-                        // Ensure GeneralData is not null for backward compatibility
-                        if (record.GeneralData == null)
-                        {
-                            record.GeneralData = new GeneralData();
-                        }
-
                         // Add to history
                         await _fileHistoryService.AddHistoryItemAsync(record.RecordName, filePath, FileHistoryType.Loaded);
                         return (record, filePath, Path.GetDirectoryName(filePath) ?? "");

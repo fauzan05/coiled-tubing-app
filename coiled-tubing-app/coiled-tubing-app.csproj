@@ -24,10 +24,6 @@
     <AppxBundlePlatforms>x86|x64|arm64</AppxBundlePlatforms>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
   </PropertyGroup>
-  
-  <ItemGroup>
-    <Page Remove="ChartSelectionDialog.xaml" />
-  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -64,18 +60,12 @@
   
   <ItemGroup>
     <Reference Include="OptoMMP_Standard_2_0">
-      <HintPath>D:\COSL\PAC-DEV-OPTOMMP-DOTNET R6.0b-001\Developer\OptoMMP_Standard_2_0.dll</HintPath>
+      <HintPath>..\..\..\..\Downloads\PAC-DEV-OPTOMMP-DOTNET R6.0b-001\Developer\OptoMMP_Standard_2_0.dll</HintPath>
     </Reference>
   </ItemGroup>
   
   <ItemGroup>
-    <None Update="ChartSelectionDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </None>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Page Update="SensorPage.xaml">
+    <Page Update="MonitoringPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

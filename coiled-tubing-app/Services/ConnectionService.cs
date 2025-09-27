@@ -122,48 +122,13 @@ namespace coiled_tubing_app.Services
 
                 System.Diagnostics.Debug.WriteLine($"SaveConnectionSettingsToCurrentFileAsync: Saving connection settings to current file '{currentFile.FilePath}'");
 
-                // Load existing file content first
-                var file = await StorageFile.GetFileFromPathAsync(currentFile.FilePath);
-                string existingContent = await FileIO.ReadTextAsync(file);
-
-                // Try to deserialize existing content to check if it's a ChartRecord
-                try
-                {
-                    var existingRecord = JsonSerializer.Deserialize<ChartRecord>(existingContent);
-                    if (existingRecord != null)
-                    {
-                        // Add connection settings to existing ChartRecord's GeneralData
-                        if (existingRecord.GeneralData == null)
-                        {
-                            existingRecord.GeneralData = new GeneralData();
-                        }
-
-                        // Add connection settings to GeneralData
-                        existingRecord.GeneralData.ConnectionSettings = connectionSettings;
-
-                        string jsonString = JsonSerializer.Serialize(existingRecord, new JsonSerializerOptions
-                        {
-                            WriteIndented = true
-                        });
-
-                        await FileIO.WriteTextAsync(file, jsonString);
-                        System.Diagnostics.Debug.WriteLine("SaveConnectionSettingsToCurrentFileAsync: Connection settings added to existing ChartRecord's GeneralData");
-
-                        return true;
-                    }
-                }
-                catch
-                {
-                    // If it's not a ChartRecord, treat it as a pure connection settings file
-                    System.Diagnostics.Debug.WriteLine("SaveConnectionSettingsToCurrentFileAsync: File is not a ChartRecord, updating as connection settings");
-                }
-
-                // If file doesn't contain ChartRecord, just overwrite with connection settings
+                // Since we removed GeneralData, just save connection settings directly to the file
                 string connectionJson = JsonSerializer.Serialize(connectionSettings, new JsonSerializerOptions
                 {
                     WriteIndented = true
                 });
 
+                var file = await StorageFile.GetFileFromPathAsync(currentFile.FilePath);
                 await FileIO.WriteTextAsync(file, connectionJson);
                 System.Diagnostics.Debug.WriteLine("SaveConnectionSettingsToCurrentFileAsync: File updated with connection settings");
 

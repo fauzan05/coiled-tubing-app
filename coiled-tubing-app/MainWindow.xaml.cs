@@ -18,13 +18,11 @@ namespace coiled_tubing_app
             InitializeComponent();
 
             // Navigate to default page
-            // Page page = new DashboardPage();
-            Page page = new SensorPage();
+            Page page = new MonitoringPage();
             contentFrame9.Navigate(page.GetType(), null, new EntranceNavigationTransitionInfo());
 
             // Set default selected item di NavigationView
-            //SetSelectedNavigationItem("DashboardPage");
-            SetSelectedNavigationItem("SensorPage");
+            SetSelectedNavigationItem("MonitoringPage");
         }
 
         private void SetSelectedNavigationItem(string tag)
@@ -70,8 +68,12 @@ namespace coiled_tubing_app
                         page = new DashboardPage();
                         break;
 
-                    case "SensorPage":
-                        page = new SensorPage();
+                    case "MonitoringPage":
+                        page = new MonitoringPage();
+                        break;
+
+                    case "SensorPage": // Keep for backward compatibility
+                        page = new MonitoringPage();
                         break;
                 }
 

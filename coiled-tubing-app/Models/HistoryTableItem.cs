@@ -14,8 +14,6 @@ namespace coiled_tubing_app.Models
         public string Directory { get; set; } = string.Empty;
         public FileHistoryType HistoryType { get; set; }
         public List<string> SelectedChartIds { get; set; } = new List<string>();
-        
-        // Original FileHistoryItem for reference
-        public FileHistoryItem OriginalItem { get; set; }
+        public FileHistoryItem? OriginalItem { get; set; }
     }
 }
