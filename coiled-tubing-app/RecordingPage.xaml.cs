@@ -1,4 +1,6 @@
 using coiled_tubing_app.Models;
+using coiled_tubing_app.Services;
+using coiled_tubing_app.Helpers;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -44,6 +46,14 @@ namespace coiled_tubing_app
             else
             {
                 System.Diagnostics.Debug.WriteLine("RecordingPage: Navigated without parameters or invalid parameter type");
+                ContentDialog errorDialog = new ContentDialog
+                {
+                    Title = "Error",
+                    Content = "No record information provided. Please select a record from the history.",
+                    CloseButtonText = "OK",
+                    XamlRoot = this.Content.XamlRoot
+                };
+                _currentRecord = null;
             }
         }
 
@@ -61,12 +71,28 @@ namespace coiled_tubing_app
             StackPanel content = new StackPanel();
             content.Spacing = 20;
 
-            // Title
+            // Title with device info button
+            StackPanel titlePanel = new StackPanel();
+            titlePanel.Orientation = Orientation.Horizontal;
+            titlePanel.Spacing = 15;
+
             TextBlock titleText = new TextBlock();
             titleText.Text = "Please choose device model";
             titleText.FontSize = 16;
             titleText.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
-            content.Children.Add(titleText);
+            titleText.VerticalAlignment = VerticalAlignment.Center;
+
+            Button deviceInfoButton = new Button();
+            deviceInfoButton.Content = "Device Info";
+            deviceInfoButton.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGray);
+            deviceInfoButton.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
+            deviceInfoButton.FontSize = 12;
+            deviceInfoButton.Padding = new Thickness(10, 5, 10, 5);
+            deviceInfoButton.IsEnabled = false; // Initially disabled until device selected
+
+            titlePanel.Children.Add(titleText);
+            titlePanel.Children.Add(deviceInfoButton);
+            content.Children.Add(titlePanel);
 
             // Form fields container
             StackPanel formPanel = new StackPanel();
@@ -89,7 +115,6 @@ namespace coiled_tubing_app
             deviceComboBox.HorizontalAlignment = HorizontalAlignment.Left;
             deviceComboBox.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
             deviceComboBox.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
-            deviceComboBox.Items.Add(new ComboBoxItem { Content = "Opto 22 - SNAP UP1 ADS" });
             Grid.SetColumn(deviceComboBox, 1);
 
             deviceGrid.Children.Add(deviceLabel);
@@ -176,6 +201,72 @@ namespace coiled_tubing_app
 
             content.Children.Add(formPanel);
 
+            // Populate device ComboBox and load existing settings
+            int selectedDeviceId = 0;
+            System.Diagnostics.Debug.WriteLine($"ConnectDeviceButton_Click: Current record: {_currentRecord?.RecordName}");
+            
+            if (_contentLoaded && _currentRecord != null && File.Exists(_currentRecord.FilePath))
+            {
+                string jsonContent = File.ReadAllText(_currentRecord.FilePath);
+                var record = JsonSerializer.Deserialize<ItemRecord>(jsonContent);
+                if (record != null && record.ConnectionSettings != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"ConnectDeviceButton_Click: Loaded connection settings for record: {_currentRecord.RecordName}");
+                    
+                    // Get device ID (prioritize DeviceId over Device string)
+                    selectedDeviceId = record.ConnectionSettings.DeviceId > 0 
+                        ? record.ConnectionSettings.DeviceId 
+                        : GetDeviceIdFromName(record.ConnectionSettings.Device);
+                    
+                    // Pre-fill other form fields
+                    hostTextBox.Text = record.ConnectionSettings.Host;
+                    portTextBox.Text = record.ConnectionSettings.Port.ToString();
+                    timeoutTextBox.Text = record.ConnectionSettings.Timeout.ToString();
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"ConnectDeviceButton_Click: No connection settings found in record: {_currentRecord.RecordName}");
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("ConnectDeviceButton_Click: No current record or file does not exist");
+            }
+
+            // Populate device ComboBox with selected device
+            DeviceManagementHelper.PopulateDeviceComboBox(deviceComboBox, selectedDeviceId);
+
+            // Device selection changed event handler
+            deviceComboBox.SelectionChanged += (s, args) =>
+            {
+                var selectedDeviceId = DeviceManagementHelper.GetSelectedDeviceId(deviceComboBox);
+                
+                // Enable/disable device info button
+                deviceInfoButton.IsEnabled = selectedDeviceId > 0;
+                
+                // Apply device-specific defaults
+                if (selectedDeviceId > 0)
+                {
+                    DeviceManagementHelper.ApplyDeviceDefaults(deviceComboBox, hostTextBox, portTextBox, timeoutTextBox);
+                }
+            };
+
+            // Initially check if we have a selected device
+            if (selectedDeviceId > 0)
+            {
+                deviceInfoButton.IsEnabled = true;
+            }
+
+            // Device Info button click handler
+            deviceInfoButton.Click += (s, args) => 
+            {
+                var currentDeviceId = DeviceManagementHelper.GetSelectedDeviceId(deviceComboBox);
+                if (currentDeviceId > 0)
+                {
+                    DeviceManagementHelper.ShowDeviceInfo(connectDeviceWindow.Content.XamlRoot, currentDeviceId);
+                }
+            };
+
             // Connect button
             Button connectButton = new Button();
             connectButton.Content = "Connect";
@@ -185,25 +276,79 @@ namespace coiled_tubing_app
             connectButton.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
             connectButton.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
             connectButton.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
+
             content.Children.Add(connectButton);
 
-            // Device Information Log
+            // Device Information Log with loading support
             Border logBorder = new Border();
             logBorder.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
             logBorder.BorderThickness = new Thickness(1);
             logBorder.Height = 150;
             logBorder.Margin = new Thickness(0, 20, 0, 0);
 
+            // Container for log content and loading indicator
+            Grid logContainer = new Grid();
+            
             ScrollViewer logScrollViewer = new ScrollViewer();
             TextBlock logTextBlock = new TextBlock();
-            logTextBlock.Text = "Device Information Log";
+            logTextBlock.Name = "DeviceLogTextBlock";
+            logTextBlock.Text = "Device Information Log\nReady for connection...";
             logTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
             logTextBlock.Padding = new Thickness(10);
             logTextBlock.VerticalAlignment = VerticalAlignment.Top;
+            logTextBlock.TextWrapping = TextWrapping.Wrap;
 
             logScrollViewer.Content = logTextBlock;
-            logBorder.Child = logScrollViewer;
+            
+            // Loading indicator
+            StackPanel loadingPanel = new StackPanel();
+            loadingPanel.Orientation = Orientation.Horizontal;
+            loadingPanel.HorizontalAlignment = HorizontalAlignment.Center;
+            loadingPanel.VerticalAlignment = VerticalAlignment.Center;
+            loadingPanel.Visibility = Visibility.Collapsed;
+            loadingPanel.Name = "LoadingPanel";
+            
+            ProgressRing progressRing = new ProgressRing();
+            progressRing.IsActive = false;
+            progressRing.Width = 30;
+            progressRing.Height = 30;
+            progressRing.Margin = new Thickness(0, 0, 10, 0);
+            
+            TextBlock loadingText = new TextBlock();
+            loadingText.Text = "Connecting...";
+            loadingText.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
+            loadingText.VerticalAlignment = VerticalAlignment.Center;
+            
+            loadingPanel.Children.Add(progressRing);
+            loadingPanel.Children.Add(loadingText);
+            
+            logContainer.Children.Add(logScrollViewer);
+            logContainer.Children.Add(loadingPanel);
+            logBorder.Child = logContainer;
             content.Children.Add(logBorder);
+
+            // Connect button click handler - Updated to pass UI references
+            connectButton.Click += async (s, args) => {
+                var connectionSettings = DeviceManagementHelper.CreateConnectionSettings(
+                    deviceComboBox, hostTextBox, portTextBox, timeoutTextBox);
+                
+                // Disable connect button during connection
+                connectButton.IsEnabled = false;
+                
+                // Show loading and update log
+                SetConnectionLoading(logTextBlock, loadingPanel, progressRing, true);
+                LogToDeviceLog(logTextBlock, $"[{System.DateTime.Now:HH:mm:ss}] Attempting to connect to {connectionSettings.Host}:{connectionSettings.Port}...");
+                
+                try
+                {
+                    await ConnectDeviceWithUI(connectDeviceWindow, connectionSettings, logTextBlock, loadingPanel, progressRing);
+                }
+                finally
+                {
+                    // Re-enable connect button
+                    connectButton.IsEnabled = true;
+                }
+            };
 
             // Bottom buttons
             Grid bottomButtonGrid = new Grid();
@@ -218,15 +363,11 @@ namespace coiled_tubing_app
             saveButton.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
             saveButton.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
             saveButton.HorizontalAlignment = HorizontalAlignment.Left;
-            saveButton.Click += (s, args) => SaveConnectionSettings(connectDeviceWindow, new Models.ConnectionSettings
-            {
-                Device = (deviceComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "",
-                Host = hostTextBox.Text,
-                Port = int.TryParse(portTextBox.Text, out int port) ? port : 0,
-                Timeout = int.TryParse(timeoutTextBox.Text, out int timeout) ? timeout : 0
-            },
-            _currentRecord
-            );
+            saveButton.Click += (s, args) => {
+                var connectionSettings = DeviceManagementHelper.CreateConnectionSettings(
+                    deviceComboBox, hostTextBox, portTextBox, timeoutTextBox);
+                SaveConnectionSettings(connectDeviceWindow, connectionSettings, _currentRecord);
+            };
             Grid.SetColumn(saveButton, 0);
 
             Button cancelButton = new Button();
@@ -243,36 +384,49 @@ namespace coiled_tubing_app
             bottomButtonGrid.Children.Add(cancelButton);
             content.Children.Add(bottomButtonGrid);
 
-            // Temukan apakah ada connection settings yang tersimpan untuk current record
-            System.Diagnostics.Debug.WriteLine($"ConnectDeviceButton_Click: Current record: {_currentRecord?.RecordName}");
-            // Jika ada, load dan pre-fill form
-            if (_contentLoaded && _currentRecord != null && File.Exists(_currentRecord.FilePath))
-            {
-                string jsonContent = File.ReadAllText(_currentRecord.FilePath);
-                var record = JsonSerializer.Deserialize<ItemRecord>(jsonContent);
-                if (record != null && record.ConnectionSettings != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"ConnectDeviceButton_Click: Loaded connection settings for record: {_currentRecord.RecordName}");
-                    // Pre-fill form fields here if needed
-                    deviceComboBox.SelectedItem = record.ConnectionSettings.Device != string.Empty ?
-                        deviceComboBox.Items.Cast<ComboBoxItem>().FirstOrDefault(item => item.Content.ToString() == record.ConnectionSettings.Device) : null;
-                    hostTextBox.Text = record.ConnectionSettings.Host;
-                    portTextBox.Text = record.ConnectionSettings.Port.ToString();
-                    timeoutTextBox.Text = record.ConnectionSettings.Timeout.ToString();
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"ConnectDeviceButton_Click: No connection settings found in record: {_currentRecord.RecordName}");
-                }
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("ConnectDeviceButton_Click: No current record or file does not exist");
-            }
-
             mainBorder.Child = content;
             connectDeviceWindow.Content = mainBorder;
             connectDeviceWindow.Activate();
+        }
+
+        /// <summary>
+        /// Show/hide loading animation in the device log
+        /// </summary>
+        private void ShowConnectionLoading(TextBlock logTextBlock, StackPanel loadingPanel, ProgressRing progressRing, bool isLoading)
+        {
+            if (isLoading)
+            {
+                loadingPanel.Visibility = Visibility.Visible;
+                progressRing.IsActive = true;
+            }
+            else
+            {
+                loadingPanel.Visibility = Visibility.Collapsed;
+                progressRing.IsActive = false;
+            }
+        }
+
+        /// <summary>
+        /// Append message to device log
+        /// </summary>
+        private void AppendToDeviceLog(TextBlock logTextBlock, string message)
+        {
+            logTextBlock.Text += $"\n{message}";
+            
+            // Scroll to bottom (simulate auto-scroll)
+            // In a real scenario, you might want to use a ScrollViewer with auto-scroll
+            System.Diagnostics.Debug.WriteLine($"Device Log: {message}");
+        }
+
+        /// <summary>
+        /// Helper method to get device ID from device name for backward compatibility
+        /// </summary>
+        private int GetDeviceIdFromName(string deviceName)
+        {
+            if (string.IsNullOrEmpty(deviceName)) return 0;
+            
+            var device = DeviceService.GetDeviceByName(deviceName);
+            return device?.Id ?? 0;
         }
 
         private void GeneralDataButton_Click(object sender, RoutedEventArgs e)
