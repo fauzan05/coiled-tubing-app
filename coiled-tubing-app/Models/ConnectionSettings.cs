@@ -4,6 +4,7 @@ namespace coiled_tubing_app.Models
 {
     public class ConnectionSettings
     {
+        public string Device { get; set; } = string.Empty;
         public string Host { get; set; } = string.Empty;
         public int Port { get; set; }
         public int Timeout { get; set; }

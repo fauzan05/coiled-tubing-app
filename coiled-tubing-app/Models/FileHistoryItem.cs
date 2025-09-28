@@ -9,6 +9,7 @@ namespace coiled_tubing_app.Models
         public string Directory { get; set; } = string.Empty;
         public DateTime LastAccessed { get; set; }
         public FileHistoryType HistoryType { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 
     public enum FileHistoryType

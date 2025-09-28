@@ -24,6 +24,9 @@
     <AppxBundlePlatforms>x86|x64|arm64</AppxBundlePlatforms>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="RecordingPage.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -62,6 +65,12 @@
     <Reference Include="OptoMMP_Standard_2_0">
       <HintPath>..\..\..\..\Downloads\PAC-DEV-OPTOMMP-DOTNET R6.0b-001\Developer\OptoMMP_Standard_2_0.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Page Update="RecordingPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   
   <ItemGroup>

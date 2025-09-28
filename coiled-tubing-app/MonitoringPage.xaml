@@ -97,7 +97,7 @@
                                 <ColumnDefinition Width="60"/>
                                 <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="2*"/>
-                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="180"/>
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Grid.Column="0" Text="No" FontWeight="SemiBold"/>
@@ -111,7 +111,9 @@
                     <ListView x:Name="HistoryDataGrid"
                               Grid.Row="1"
                               SelectionMode="Single"
-                              BorderThickness="0">
+                              BorderThickness="0"
+                              IsItemClickEnabled="True"
+                              ItemClick="OpenRecordingPage">
                         <ListView.ItemTemplate>
                             <DataTemplate>
                                 <Border BorderBrush="#E0E0E0" 
@@ -123,7 +125,7 @@
                                             <ColumnDefinition Width="60"/>
                                             <ColumnDefinition Width="2*"/>
                                             <ColumnDefinition Width="2*"/>
-                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="180"/>
                                         </Grid.ColumnDefinitions>
 
                                         <TextBlock Grid.Column="0" 
@@ -138,22 +140,45 @@
                                                    FontWeight="SemiBold"/>
 
                                         <TextBlock Grid.Column="2" 
-                                                   Text="{Binding FormattedDate}" 
+                                                   Text="{Binding FormattedCreatedAt}" 
                                                    VerticalAlignment="Center"
                                                    FontSize="13"
                                                    Foreground="Gray"/>
                                         
-                                        <Button Grid.Column="3"
-                                                Background="Transparent"
-                                                BorderBrush="Red"
-                                                Foreground="Red"
-                                                FontSize="12"
-                                                Padding="8,4"
-                                                Tag="{Binding}"
-                                                Click="DeleteHistoryItem_Click"
-                                                ToolTipService.ToolTip="Delete this record">
-                                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74D;" FontSize="14"/>
-                                        </Button>
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="5">
+                                            <Button Background="Transparent"
+                                                    BorderBrush="Green"
+                                                    Foreground="Green"
+                                                    FontSize="12"
+                                                    Padding="8,4"
+                                                    Tag="{Binding}"
+                                                    Click="OpenInDirectoryButton_Click"
+                                                    ToolTipService.ToolTip="Open file location">
+                                                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8DA;" FontSize="14"/>
+                                            </Button>
+                                            
+                                            <Button Background="Transparent"
+                                                    BorderBrush="Blue"
+                                                    Foreground="Blue"
+                                                    FontSize="12"
+                                                    Padding="8,4"
+                                                    Tag="{Binding}"
+                                                    Click="EditHistoryItem_Click"
+                                                    ToolTipService.ToolTip="Rename this record">
+                                                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE70F;" FontSize="14"/>
+                                            </Button>
+                                            
+                                            <Button Background="Transparent"
+                                                    BorderBrush="Red"
+                                                    Foreground="Red"
+                                                    FontSize="12"
+                                                    Padding="8,4"
+                                                    Tag="{Binding}"
+                                                    Click="DeleteHistoryItem_Click"
+                                                    ToolTipService.ToolTip="Delete this record">
+                                                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74D;" FontSize="14"/>
+                                            </Button>
+                                        </StackPanel>
                                     </Grid>
                                 </Border>
                             </DataTemplate>

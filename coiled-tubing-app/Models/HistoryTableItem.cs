@@ -9,7 +9,9 @@ namespace coiled_tubing_app.Models
         public string RecordName { get; set; } = string.Empty;
         public string ChartsPreview { get; set; } = string.Empty;
         public DateTime LastAccessed { get; set; }
+        public DateTime CreatedAt { get; set; }
         public string FormattedDate => LastAccessed.ToString("yyyy-MM-dd HH:mm");
+        public string FormattedCreatedAt => CreatedAt.ToString("yyyy-MM-dd HH:mm");
         public string FilePath { get; set; } = string.Empty;
         public string Directory { get; set; } = string.Empty;
         public FileHistoryType HistoryType { get; set; }

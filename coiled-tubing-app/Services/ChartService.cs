@@ -19,12 +19,12 @@ namespace coiled_tubing_app.Services
         }
 
         // Simpan record ke file .fxz dan return info file
-        public async Task<(bool Success, string FilePath, string Directory)> SaveRecordAsync(ChartRecord record)
+        public async Task<(bool Success, string FilePath, string Directory)> SaveRecordAsync(ItemRecord record)
         {
             try
             {
                 System.Diagnostics.Debug.WriteLine($"SaveRecordAsync: Starting save for record '{record.RecordName}'");
-                
+
                 // Convert record ke JSON
                 string jsonString = JsonSerializer.Serialize(record, new JsonSerializerOptions
                 {
@@ -48,11 +48,11 @@ namespace coiled_tubing_app.Services
 
                 // User pilih lokasi save
                 StorageFile file = await savePicker.PickSaveFileAsync();
-                
+
                 if (file != null)
                 {
                     System.Diagnostics.Debug.WriteLine($"SaveRecordAsync: User selected file: '{file.Path}'");
-                    
+
                     await FileIO.WriteTextAsync(file, jsonString);
                     System.Diagnostics.Debug.WriteLine($"SaveRecordAsync: File written successfully");
 
@@ -62,7 +62,7 @@ namespace coiled_tubing_app.Services
 
                     var directory = Path.GetDirectoryName(file.Path) ?? "";
                     System.Diagnostics.Debug.WriteLine($"SaveRecordAsync: Success - FilePath: '{file.Path}', Directory: '{directory}'");
-                    
+
                     return (true, file.Path, directory);
                 }
                 else
@@ -80,12 +80,12 @@ namespace coiled_tubing_app.Services
         }
 
         // Overload untuk save ke path yang sudah ada (untuk update existing record)
-        public async Task<(bool Success, string FilePath, string Directory)> SaveRecordToPathAsync(ChartRecord record, string filePath)
+        public async Task<(bool Success, string FilePath, string Directory)> SaveRecordToPathAsync(ItemRecord record, string filePath)
         {
             try
             {
                 System.Diagnostics.Debug.WriteLine($"SaveRecordToPathAsync: Starting save for record '{record.RecordName}' to '{filePath}'");
-                
+
                 // Convert record ke JSON
                 string jsonString = JsonSerializer.Serialize(record, new JsonSerializerOptions
                 {
@@ -104,7 +104,7 @@ namespace coiled_tubing_app.Services
 
                 var directory = Path.GetDirectoryName(filePath) ?? "";
                 System.Diagnostics.Debug.WriteLine($"SaveRecordToPathAsync: Success - FilePath: '{filePath}', Directory: '{directory}'");
-                
+
                 return (true, filePath, directory);
             }
             catch (Exception ex)
@@ -116,7 +116,7 @@ namespace coiled_tubing_app.Services
         }
 
         // Load record dari file .fxz dan return record dengan file info
-        public async Task<(ChartRecord? Record, string FilePath, string Directory)> LoadRecordAsync()
+        public async Task<(ItemRecord? Record, string FilePath, string Directory)> LoadRecordAsync()
         {
             try
             {
@@ -133,7 +133,7 @@ namespace coiled_tubing_app.Services
                 if (file != null)
                 {
                     string jsonString = await FileIO.ReadTextAsync(file);
-                    var record = JsonSerializer.Deserialize<ChartRecord>(jsonString);
+                    var record = JsonSerializer.Deserialize<ItemRecord>(jsonString);
 
                     if (record != null)
                     {
@@ -158,14 +158,14 @@ namespace coiled_tubing_app.Services
             return _fileHistoryService;
         }
 
-        public async Task<(ChartRecord? Record, string FilePath, string Directory)> LoadRecordFromPathAsync(string filePath)
+        public async Task<(ItemRecord? Record, string FilePath, string Directory)> LoadRecordFromPathAsync(string filePath)
         {
             try
             {
                 if (File.Exists(filePath))
                 {
                     string jsonString = await FileIO.ReadTextAsync(await StorageFile.GetFileFromPathAsync(filePath));
-                    var record = JsonSerializer.Deserialize<ChartRecord>(jsonString);
+                    var record = JsonSerializer.Deserialize<ItemRecord>(jsonString);
                     if (record != null)
                     {
                         // Add to history
