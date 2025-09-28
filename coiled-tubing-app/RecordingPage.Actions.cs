@@ -272,47 +272,8 @@ namespace coiled_tubing_app
         /// </summary>
         private void SetConnectionLoading(TextBlock logTextBlock, StackPanel loadingPanel, ProgressRing progressRing, bool isLoading)
         {
-            if (isLoading)
-            {
-                loadingPanel.Visibility = Visibility.Visible;
-                progressRing.IsActive = true;
-            }
-            else
-            {
-                loadingPanel.Visibility = Visibility.Collapsed;
-                progressRing.IsActive = false;
-            }
-        }
-
-        /// <summary>
-        /// Append message to device log
-        /// </summary>
-        private void LogToDeviceLog(TextBlock logTextBlock, string message)
-        {
-            var timestamp = DateTime.Now.ToString("HH:mm:ss");
-            var logEntry = $"[{timestamp}] {message}";
-
-            // Append to existing text
-            if (string.IsNullOrEmpty(logTextBlock.Text) || logTextBlock.Text == "Device Information Log")
-            {
-                logTextBlock.Text = $"Device Information Log\n{logEntry}";
-            }
-            else
-            {
-                logTextBlock.Text += $"\n{logEntry}";
-            }
-
-            // Keep log manageable (max 20 lines)
-            var lines = logTextBlock.Text.Split('\n');
-            if (lines.Length > 21) // 20 + header line
-            {
-                var recentLines = new string[21];
-                recentLines[0] = lines[0]; // Keep header
-                Array.Copy(lines, lines.Length - 20, recentLines, 1, 20); // Keep last 20 log entries
-                logTextBlock.Text = string.Join('\n', recentLines);
-            }
-
-            System.Diagnostics.Debug.WriteLine($"Device Log: {logEntry}");
+            // Delegate to the simplified method in main class
+            SetConnectionLoading(loadingPanel, progressRing, isLoading);
         }
     }
 }

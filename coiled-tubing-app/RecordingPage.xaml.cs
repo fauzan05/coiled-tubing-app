@@ -4,6 +4,7 @@ using coiled_tubing_app.Helpers;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -279,16 +280,37 @@ namespace coiled_tubing_app
 
             content.Children.Add(connectButton);
 
-            // Device Information Log with loading support
+            // Loading indicator - positioned right below Connect button
+            StackPanel loadingPanel = new StackPanel();
+            loadingPanel.Orientation = Orientation.Horizontal;
+            loadingPanel.HorizontalAlignment = HorizontalAlignment.Center;
+            loadingPanel.VerticalAlignment = VerticalAlignment.Center;
+            loadingPanel.Visibility = Visibility.Collapsed;
+            loadingPanel.Margin = new Thickness(0, 10, 0, 10);
+            
+            ProgressRing progressRing = new ProgressRing();
+            progressRing.IsActive = false;
+            progressRing.Width = 25;
+            progressRing.Height = 25;
+            progressRing.Margin = new Thickness(0, 0, 8, 0);
+            
+            TextBlock loadingText = new TextBlock();
+            loadingText.Text = "Connecting...";
+            loadingText.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
+            loadingText.VerticalAlignment = VerticalAlignment.Center;
+            loadingText.FontSize = 12;
+            
+            loadingPanel.Children.Add(progressRing);
+            loadingPanel.Children.Add(loadingText);
+            content.Children.Add(loadingPanel);
+
+            // Device Information Log
             Border logBorder = new Border();
             logBorder.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
             logBorder.BorderThickness = new Thickness(1);
             logBorder.Height = 150;
-            logBorder.Margin = new Thickness(0, 20, 0, 0);
+            logBorder.Margin = new Thickness(0, 10, 0, 0);
 
-            // Container for log content and loading indicator
-            Grid logContainer = new Grid();
-            
             ScrollViewer logScrollViewer = new ScrollViewer();
             TextBlock logTextBlock = new TextBlock();
             logTextBlock.Name = "DeviceLogTextBlock";
@@ -299,32 +321,7 @@ namespace coiled_tubing_app
             logTextBlock.TextWrapping = TextWrapping.Wrap;
 
             logScrollViewer.Content = logTextBlock;
-            
-            // Loading indicator
-            StackPanel loadingPanel = new StackPanel();
-            loadingPanel.Orientation = Orientation.Horizontal;
-            loadingPanel.HorizontalAlignment = HorizontalAlignment.Center;
-            loadingPanel.VerticalAlignment = VerticalAlignment.Center;
-            loadingPanel.Visibility = Visibility.Collapsed;
-            loadingPanel.Name = "LoadingPanel";
-            
-            ProgressRing progressRing = new ProgressRing();
-            progressRing.IsActive = false;
-            progressRing.Width = 30;
-            progressRing.Height = 30;
-            progressRing.Margin = new Thickness(0, 0, 10, 0);
-            
-            TextBlock loadingText = new TextBlock();
-            loadingText.Text = "Connecting...";
-            loadingText.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
-            loadingText.VerticalAlignment = VerticalAlignment.Center;
-            
-            loadingPanel.Children.Add(progressRing);
-            loadingPanel.Children.Add(loadingText);
-            
-            logContainer.Children.Add(logScrollViewer);
-            logContainer.Children.Add(loadingPanel);
-            logBorder.Child = logContainer;
+            logBorder.Child = logScrollViewer;
             content.Children.Add(logBorder);
 
             // Connect button click handler - Updated to pass UI references
@@ -336,8 +333,8 @@ namespace coiled_tubing_app
                 connectButton.IsEnabled = false;
                 
                 // Show loading and update log
-                SetConnectionLoading(logTextBlock, loadingPanel, progressRing, true);
-                LogToDeviceLog(logTextBlock, $"[{System.DateTime.Now:HH:mm:ss}] Attempting to connect to {connectionSettings.Host}:{connectionSettings.Port}...");
+                SetConnectionLoading(loadingPanel, progressRing, true);
+                LogToDeviceLog(logTextBlock, $"Attempting to connect to {connectionSettings.Host}:{connectionSettings.Port}...");
                 
                 try
                 {
@@ -390,9 +387,9 @@ namespace coiled_tubing_app
         }
 
         /// <summary>
-        /// Show/hide loading animation in the device log
+        /// Show/hide loading animation - positioned below Connect button
         /// </summary>
-        private void ShowConnectionLoading(TextBlock logTextBlock, StackPanel loadingPanel, ProgressRing progressRing, bool isLoading)
+        private void SetConnectionLoading(StackPanel loadingPanel, ProgressRing progressRing, bool isLoading)
         {
             if (isLoading)
             {
@@ -407,15 +404,36 @@ namespace coiled_tubing_app
         }
 
         /// <summary>
-        /// Append message to device log
+        /// Append message to device log with timestamp
         /// </summary>
-        private void AppendToDeviceLog(TextBlock logTextBlock, string message)
+        private void LogToDeviceLog(TextBlock logTextBlock, string message)
         {
-            logTextBlock.Text += $"\n{message}";
+            var timestamp = DateTime.Now.ToString("HH:mm:ss");
+            var logEntry = $"[{timestamp}] {message}";
             
-            // Scroll to bottom (simulate auto-scroll)
-            // In a real scenario, you might want to use a ScrollViewer with auto-scroll
-            System.Diagnostics.Debug.WriteLine($"Device Log: {message}");
+            // Append to existing text
+            if (string.IsNullOrEmpty(logTextBlock.Text) || 
+                logTextBlock.Text == "Device Information Log" || 
+                logTextBlock.Text == "Device Information Log\nReady for connection...")
+            {
+                logTextBlock.Text = $"Device Information Log\n{logEntry}";
+            }
+            else
+            {
+                logTextBlock.Text += $"\n{logEntry}";
+            }
+            
+            // Keep log manageable (max 15 lines to fit in smaller area)
+            var lines = logTextBlock.Text.Split('\n');
+            if (lines.Length > 16) // 15 + header line
+            {
+                var recentLines = new string[16];
+                recentLines[0] = lines[0]; // Keep header
+                Array.Copy(lines, lines.Length - 15, recentLines, 1, 15); // Keep last 15 log entries
+                logTextBlock.Text = string.Join('\n', recentLines);
+            }
+            
+            System.Diagnostics.Debug.WriteLine($"Device Log: {logEntry}");
         }
 
         /// <summary>
